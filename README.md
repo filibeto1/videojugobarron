@@ -36,4 +36,4 @@ Este proyecto está bajo la licencia MIT.
 
 ---
 
-Desarrollado por [MiguelG5](https://github.com/MiguelG5).
+Desarrollado por [Filiberto](https://github.com/filibeto1).
