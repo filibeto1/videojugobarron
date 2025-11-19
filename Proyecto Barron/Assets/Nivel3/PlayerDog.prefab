@@ -12,10 +12,10 @@ GameObject:
   - component: {fileID: 1052946558884571159}
   - component: {fileID: 8868377832107612669}
   - component: {fileID: 4055294525004944301}
-  - component: {fileID: 2934902251063768343}
+  - component: {fileID: 509909974840972219}
   m_Layer: 0
   m_Name: PlayerDog
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -102,7 +102,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 0
+  m_GravityScale: 5
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -159,7 +159,7 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
---- !u!114 &2934902251063768343
+--- !u!114 &509909974840972219
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -168,9 +168,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 8925021289199737854}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2be7b9d03423a56438c0fca272c3777e, type: 3}
+  m_Script: {fileID: 11500000, guid: 709ee11994a2f44658e5fc9887c45081, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 5
-  checkpoints: []
-  currentCheckpoint: 0
+  rb: {fileID: 0}
+  collider2d: {fileID: 0}
+  animator: {fileID: 0}
+  audioSource: {fileID: 0}
+  maxSpeed: 7
+  health: 3
+  controlEnabled: 1
+  jumpAudio: {fileID: 0}
+  damageAudio: {fileID: 0}
+  victoryAudio: {fileID: 0}
+  velocity: {x: 0, y: 0, z: 0}
+  jumpForce: 12
+  moveSpeed: 7
+  gravityScale: 2
+  maxFallSpeed: -20
+  jumpState: 0
+  isGrounded: 1
+  isAlive: 1
+  groundCheck: {fileID: 0}
+  groundCheckRadius: 0.2
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 1

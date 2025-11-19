@@ -25,11 +25,10 @@ public class QuestionSystem : MonoBehaviour
     public TMP_Text resultadoText;
     public Button enviarButton;
 
-    private PlayerControllerNivel3 playerController;
+    private System.Action<bool> onAnswerSubmitted;
 
     void Start()
     {
-        // ✅ FORZAR que el panel esté oculto al inicio
         if (preguntaPanel != null)
         {
             preguntaPanel.SetActive(false);
@@ -40,44 +39,40 @@ public class QuestionSystem : MonoBehaviour
             Debug.LogError("❌ preguntaPanel no está asignado en el Inspector");
         }
 
-        // Buscar player controller
-        playerController = FindObjectOfType<PlayerControllerNivel3>();
-
-        // Configurar botón
         enviarButton.onClick.AddListener(VerificarRespuesta);
-
         Debug.Log("✅ QuestionSystem inicializado");
     }
 
     void OnEnable()
     {
-        // ✅ Asegurar que el panel esté oculto cuando el objeto se active
         if (preguntaPanel != null)
         {
             preguntaPanel.SetActive(false);
         }
     }
 
-    public void MostrarPregunta()
+    public void MostrarPregunta(System.Action<bool> callback = null)
     {
+        onAnswerSubmitted = callback;
+
         if (preguntas.Count == 0)
         {
             Debug.LogError("❌ No hay preguntas configuradas en QuestionSystem");
+            callback?.Invoke(false);
             return;
         }
 
-        // ✅ Verificar que el panel esté asignado
         if (preguntaPanel == null)
         {
             Debug.LogError("❌ preguntaPanel es null - no se puede mostrar pregunta");
+            callback?.Invoke(false);
             return;
         }
 
-        // Seleccionar pregunta aleatoria
+        Time.timeScale = 0;
         preguntaActual = preguntas[Random.Range(0, preguntas.Count)];
         preguntaPanel.SetActive(true);
 
-        // Configurar texto según tipo
         switch (preguntaActual.tipoPregunta)
         {
             case "mal":
@@ -119,9 +114,11 @@ public class QuestionSystem : MonoBehaviour
             }
             else
             {
-                resultadoText.text = "INCORRECTO. Presiona E para intentar de nuevo.";
+                resultadoText.text = "INCORRECTO. Intenta de nuevo.";
                 resultadoText.color = Color.red;
-                // Jugador queda inmovil - debe presionar E
+                respuestaInput.text = "";
+                respuestaInput.Select();
+                respuestaInput.ActivateInputField();
             }
         }
         else
@@ -133,17 +130,52 @@ public class QuestionSystem : MonoBehaviour
 
     IEnumerator OcultarPregunta(bool correcto)
     {
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSecondsRealtime(2f);
 
-        // ✅ Asegurar que el panel no sea null antes de ocultarlo
         if (preguntaPanel != null)
         {
             preguntaPanel.SetActive(false);
         }
 
-        if (correcto && playerController != null)
+        Time.timeScale = 1;
+        onAnswerSubmitted?.Invoke(correcto);
+    }
+
+    public void CerrarPregunta()
+    {
+        if (preguntaPanel != null && preguntaPanel.activeInHierarchy)
         {
-            playerController.ContinuarMovimiento();
+            StartCoroutine(OcultarPregunta(false));
         }
+    }
+
+    void Update()
+    {
+        if (preguntaPanel != null && preguntaPanel.activeInHierarchy)
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                CerrarPregunta();
+            }
+            else if (Input.GetKeyDown(KeyCode.Return))
+            {
+                VerificarRespuesta();
+            }
+        }
+    }
+
+    public void AgregarPregunta(string secuencia, int respuesta, string tipo)
+    {
+        preguntas.Add(new SecuenciaPregunta
+        {
+            secuencia = secuencia,
+            respuestaCorrecta = respuesta,
+            tipoPregunta = tipo
+        });
+    }
+
+    public bool IsQuestionActive()
+    {
+        return preguntaPanel != null && preguntaPanel.activeInHierarchy;
     }
 }

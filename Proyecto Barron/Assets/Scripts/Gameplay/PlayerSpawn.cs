@@ -1,6 +1,7 @@
 using Platformer.Core;
 using Platformer.Mechanics;
 using Platformer.Model;
+using UnityEngine; // AGREGAR ESTA LÍNEA
 
 namespace Platformer.Gameplay
 {
@@ -20,13 +21,13 @@ namespace Platformer.Gameplay
             player.controlEnabled = false;
 
             // Incrementar la salud del jugador
-            player.health.Increment();
+            player.health = UnityEngine.Mathf.Min(player.health + 1, 3); // Usar Mathf.Min
 
             // Teletransportar al jugador a la posición de inicio
             player.Teleport(Simulation.GetModel<PlatformerModel>().spawnPoint.transform.position);
 
             // Establecer el estado de salto del jugador
-            player.GetComponent<PlayerController>().jumpState = PlayerController.JumpState.Grounded;
+            player.jumpState = PlayerController.JumpState.Grounded;
 
             // Detener la animación de muerte
             player.animator.SetBool("dead", false);

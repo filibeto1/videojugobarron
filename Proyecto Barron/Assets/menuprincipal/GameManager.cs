@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-
-
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
@@ -12,12 +10,20 @@ public class GameManager : MonoBehaviour
     public List<Personaje> personajes;
     public int jugadorSeleccionado = 0;
 
-    [Header("Spawn Points")]
+    [Header("Spawn Points - SOLO REFERENCIA")]
+    [Tooltip("Estos spawn points son usados por PlayerScenePersister, no por GameManager")]
     public Transform playerSpawnPoint;
     public Transform botSpawnPoint;
 
-    [Header("Prefabs")]
+    [Header("Prefabs - SOLO REFERENCIA")]
+    [Tooltip("Estos prefabs son usados por PlayerScenePersister, no por GameManager")]
     public GameObject playerPrefab;
+    public GameObject botPrefab;
+
+    // NUEVAS VARIABLES PARA EL SISTEMA DE CHECKPOINTS
+    private int currentCheckpoint = 0;
+    private int totalCheckpoints = 4;
+    private bool gameActive = false;
 
     private void Awake()
     {
@@ -28,25 +34,168 @@ public class GameManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             Debug.Log("✅ GameManager creado y persistente");
-
-            if (personajes == null)
-            {
-                personajes = new List<Personaje>();
-            }
         }
         else
         {
             Destroy(gameObject);
+            return;
+        }
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        Debug.Log($"📍 Escena cargada: {scene.name}");
+
+        // ✅ GameManager YA NO SPAWNA JUGADORES
+        // PlayerScenePersister se encarga de eso
+        Debug.Log("✅ GameManager: Dejando que PlayerScenePersister maneje los jugadores");
+
+        // Reiniciar estado del juego al cargar nueva escena
+        if (scene.name != "MainMenu") // Asumiendo que tu menú principal tiene este nombre
+        {
+            ResetGameState();
         }
     }
 
-    void Start()
+    // ========================================
+    // NUEVOS MÉTODOS PARA EL SISTEMA DE CARRERA
+    // ========================================
+
+    /// <summary>
+    /// Reinicia el estado del juego para nueva partida
+    /// </summary>
+    public void ResetGameState()
     {
-        if (SceneManager.GetActiveScene().name == "Nivel3")
+        currentCheckpoint = 0;
+        gameActive = false;
+        Debug.Log("🔄 Estado del juego reiniciado");
+    }
+
+    /// <summary>
+    /// Llamado por CountdownManager cuando termina la cuenta regresiva
+    /// </summary>
+    public void StartGame()
+    {
+        gameActive = true;
+        currentCheckpoint = 0;
+        Debug.Log("🎮 ¡Juego iniciado! Los jugadores pueden moverse");
+
+        // Activar controles de los jugadores si están desactivados
+        GameObject player = GetPlayer();
+        if (player != null)
         {
-            SpawnPlayers();
+            MonoBehaviour[] scripts = player.GetComponents<MonoBehaviour>();
+            foreach (MonoBehaviour script in scripts)
+            {
+                script.enabled = true;
+            }
+            Debug.Log("✅ Controles del jugador activados");
+        }
+
+        // Activar bot si existe
+        GameObject bot = GameObject.FindGameObjectWithTag("Bot");
+        if (bot != null)
+        {
+            MonoBehaviour[] scripts = bot.GetComponents<MonoBehaviour>();
+            foreach (MonoBehaviour script in scripts)
+            {
+                script.enabled = true;
+            }
+            Debug.Log("✅ Controles del bot activados");
         }
     }
+
+    /// <summary>
+    /// Llamado cuando un checkpoint se completa correctamente
+    /// </summary>
+    public void CheckpointReached(int checkpointNumber)
+    {
+        if (!gameActive)
+        {
+            Debug.LogWarning("⚠️ Checkpoint alcanzado pero juego no activo");
+            return;
+        }
+
+        if (checkpointNumber == currentCheckpoint + 1)
+        {
+            currentCheckpoint = checkpointNumber;
+            Debug.Log($"✅ Checkpoint {checkpointNumber} completado! Progreso: {currentCheckpoint}/{totalCheckpoints}");
+
+            if (currentCheckpoint >= totalCheckpoints)
+            {
+                GameCompleted();
+            }
+        }
+        else if (checkpointNumber <= currentCheckpoint)
+        {
+            Debug.Log($"ℹ️ Checkpoint {checkpointNumber} ya fue completado antes");
+        }
+        else
+        {
+            Debug.LogWarning($"⚠️ Checkpoint {checkpointNumber} saltado. Esperando checkpoint {currentCheckpoint + 1}");
+        }
+    }
+
+    /// <summary>
+    /// Llamado cuando todos los checkpoints están completados
+    /// </summary>
+    private void GameCompleted()
+    {
+        gameActive = false;
+        Debug.Log("🎉 ¡Juego completado! Todos los checkpoints superados");
+
+        // Mostrar pantalla de victoria
+        ShowVictoryScreen();
+
+        // Desactivar controles de jugadores
+        DisablePlayerControls();
+    }
+
+    /// <summary>
+    /// Muestra pantalla de victoria (debes implementar tu UI)
+    /// </summary>
+    private void ShowVictoryScreen()
+    {
+        // Aquí implementa tu lógica de UI de victoria
+        Debug.Log("🏆 ¡Mostrar pantalla de victoria!");
+
+        // Ejemplo básico - puedes expandir esto
+        // victoryPanel.SetActive(true);
+        // Time.timeScale = 0f; // Pausar el juego
+    }
+
+    /// <summary>
+    /// Desactiva controles de jugadores al terminar el juego
+    /// </summary>
+    private void DisablePlayerControls()
+    {
+        GameObject player = GetPlayer();
+        if (player != null)
+        {
+            // Ejemplo: desactivar movimiento
+            MonoBehaviour moveScript = player.GetComponent<MonoBehaviour>(); // Reemplaza con tu script de movimiento
+            if (moveScript != null)
+            {
+                moveScript.enabled = false;
+            }
+        }
+
+        GameObject bot = GameObject.FindGameObjectWithTag("Bot");
+        if (bot != null)
+        {
+            MonoBehaviour botScript = bot.GetComponent<MonoBehaviour>(); // Reemplaza con tu script de bot
+            if (botScript != null)
+            {
+                botScript.enabled = false;
+            }
+        }
+    }
+
+    // ========================================
+    // MÉTODOS DE PERSONAJES (EXISTENTES)
+    // ========================================
 
     public void SeleccionarPersonaje(int index)
     {
@@ -57,125 +206,121 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.Save();
             Debug.Log($"✅ Personaje seleccionado: {personajes[index].nombre}");
         }
-    }
-
-    void SpawnPlayers()
-    {
-        SpawnPlayer();
-        SpawnBot();
-    }
-
-    void SpawnPlayer()
-    {
-        if (playerSpawnPoint != null && playerPrefab != null)
+        else
         {
-            GameObject player = Instantiate(playerPrefab, playerSpawnPoint.position, Quaternion.identity);
-            player.name = "Player1";
-            player.tag = "Player";
+            Debug.LogWarning($"⚠️ Índice de personaje inválido: {index}");
+        }
+    }
 
-            // Asegurar que tenga los componentes necesarios
-            SetupPlayerForNivel3(player);
+    public Personaje GetPersonajeSeleccionado()
+    {
+        if (personajes != null && jugadorSeleccionado >= 0 && jugadorSeleccionado < personajes.Count)
+        {
+            return personajes[jugadorSeleccionado];
+        }
+        return null;
+    }
 
-            Debug.Log($"✅ Jugador spawnedo desde prefab: {playerPrefab.name}");
+    public int GetJugadorSeleccionado()
+    {
+        return jugadorSeleccionado;
+    }
+
+    // ========================================
+    // MÉTODOS AUXILIARES (EXISTENTES)
+    // ========================================
+
+    /// <summary>
+    /// Fuerza el respawn de jugadores (SOLO usar si es absolutamente necesario)
+    /// Normalmente PlayerScenePersister maneja esto automáticamente
+    /// </summary>
+    public void ForceRespawnPlayers()
+    {
+        Debug.LogWarning("🔄 ForceRespawnPlayers llamado - Pidiendo a PlayerScenePersister que recree jugadores");
+
+        // Destruir jugadores existentes
+        GameObject existingPlayer = GameObject.FindGameObjectWithTag("Player");
+        GameObject existingBot = GameObject.FindGameObjectWithTag("Bot");
+
+        if (existingPlayer != null)
+        {
+            Destroy(existingPlayer);
+            Debug.Log("🗑️ Jugador destruido");
+        }
+
+        if (existingBot != null)
+        {
+            Destroy(existingBot);
+            Debug.Log("🗑️ Bot destruido");
+        }
+
+        // Pedir a PlayerScenePersister que recree
+        StartCoroutine(RequestPlayerRecreation());
+    }
+
+    private IEnumerator RequestPlayerRecreation()
+    {
+        yield return new WaitForSeconds(0.2f);
+
+        if (PlayerScenePersister.Instance != null)
+        {
+            PlayerScenePersister.Instance.EnsurePlayerExists();
+            Debug.Log("✅ Solicitado recreación de jugador a PlayerScenePersister");
         }
         else
         {
-            Debug.LogError("❌ PlayerSpawnPoint o playerPrefab no asignado");
-            if (playerSpawnPoint == null) Debug.LogError("❌ PlayerSpawnPoint es null");
-            if (playerPrefab == null) Debug.LogError("❌ PlayerPrefab es null");
+            Debug.LogError("❌ PlayerScenePersister no encontrado");
         }
     }
 
-    void SetupPlayerForNivel3(GameObject player)
+    /// <summary>
+    /// Obtiene referencia al jugador actual
+    /// </summary>
+    public GameObject GetPlayer()
     {
-        Debug.Log($"🔧 Configurando player: {player.name}");
-
-        // Verificar Rigidbody2D
-        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-        if (rb == null)
+        if (PlayerScenePersister.Instance != null)
         {
-            Debug.LogError($"❌ {player.name} NO tiene Rigidbody2D!");
-            rb = player.AddComponent<Rigidbody2D>();
-        }
-        else
-        {
-            Debug.Log($"✅ {player.name} tiene Rigidbody2D");
+            return PlayerScenePersister.Instance.GetPlayer();
         }
 
-        rb.gravityScale = 0;
-        rb.freezeRotation = true;
-
-        // Verificar Collider2D
-        if (player.GetComponent<Collider2D>() == null)
-        {
-            Debug.LogError($"❌ {player.name} NO tiene Collider2D!");
-            player.AddComponent<BoxCollider2D>();
-        }
-        else
-        {
-            Debug.Log($"✅ {player.name} tiene Collider2D");
-        }
-
-        // ✅ COMENTADO: NO añadir PlayerControllerNivel3 si ya existe en el prefab
-        // if (player.GetComponent<PlayerControllerNivel3>() == null)
-        // {
-        //     Debug.LogError($"❌ {player.name} NO tiene PlayerControllerNivel3!");
-        //     player.AddComponent<PlayerControllerNivel3>();
-        // }
-        // else
-        // {
-        //     Debug.Log($"✅ {player.name} tiene PlayerControllerNivel3");
-        // }
-
-        Debug.Log($"🎯 Configuración completada para: {player.name}");
+        // Fallback: buscar por tag
+        return GameObject.FindGameObjectWithTag("Player");
     }
 
-    void SpawnBot()
+    /// <summary>
+    /// Verifica si hay un jugador en la escena
+    /// </summary>
+    public bool HasPlayer()
     {
-        if (botSpawnPoint != null)
-        {
-            GameObject bot = new GameObject("Bot");
-            bot.transform.position = botSpawnPoint.position;
-            bot.tag = "Bot";
-
-            // Añadir Sprite
-            SpriteRenderer botSprite = bot.AddComponent<SpriteRenderer>();
-            botSprite.color = Color.red;
-            botSprite.sprite = CreateCircleSprite(32);
-
-            // Añadir componentes físicos
-            Rigidbody2D rb = bot.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 0;
-            rb.freezeRotation = true;
-
-            bot.AddComponent<CircleCollider2D>();
-
-            // Añadir controlador del bot
-            BotController botController = bot.AddComponent<BotController>();
-
-            Debug.Log("✅ Bot spawnedo");
-        }
+        return GetPlayer() != null;
     }
 
-    Sprite CreateCircleSprite(int radius)
+    // ========================================
+    // NUEVOS MÉTODOS PARA OBTENER ESTADO DEL JUEGO
+    // ========================================
+
+    public bool IsGameActive()
     {
-        Texture2D texture = new Texture2D(radius * 2, radius * 2);
-        Color[] colors = new Color[texture.width * texture.height];
+        return gameActive;
+    }
 
-        Vector2 center = new Vector2(radius, radius);
+    public int GetCurrentCheckpoint()
+    {
+        return currentCheckpoint;
+    }
 
-        for (int y = 0; y < texture.height; y++)
-        {
-            for (int x = 0; x < texture.width; x++)
-            {
-                float distance = Vector2.Distance(new Vector2(x, y), center);
-                colors[y * texture.width + x] = distance <= radius ? Color.white : Color.clear;
-            }
-        }
+    public int GetTotalCheckpoints()
+    {
+        return totalCheckpoints;
+    }
 
-        texture.SetPixels(colors);
-        texture.Apply();
+    // ========================================
+    // LIMPIEZA
+    // ========================================
 
-        return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.one * 0.5f);
+    void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        Debug.Log("🗑️ GameManager destruido");
     }
 }

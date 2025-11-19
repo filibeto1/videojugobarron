@@ -8,6 +8,15 @@ TagManager:
   - PowerUp
   - Numero
   - Enemy
+  - Bot
+  - Checkpoint
+  - Player2
+  - QuestionZone
+  - Ground
+  - CameraP2
+  - BotCamera
+  - Triggers
+  - Player1
   layers:
   - Default
   - TransparentFX

@@ -17,24 +17,41 @@ namespace Platformer.Gameplay
         public override void Execute()
         {
             var player = model.player;
-            if (player.health.IsAlive)
+
+            // Verificar si el jugador está vivo
+            if (player.health > 0)
             {
-                // Marcar al jugador como muerto
-                player.health.Die();
+                // Reducir salud
+                player.health--;
 
-                // Detener el seguimiento de la cámara del jugador
-                model.virtualCamera.m_Follow = null;
-                model.virtualCamera.m_LookAt = null;
+                // Si la salud llega a 0, ejecutar muerte completa
+                if (player.health <= 0)
+                {
+                    // Marcar al jugador como muerto
+                    player.Die();
 
-                // Deshabilitar el control del jugador
-                player.controlEnabled = false;
+                    // Detener el seguimiento de la cámara del jugador
+                    model.virtualCamera.m_Follow = null;
+                    model.virtualCamera.m_LookAt = null;
 
-                // Realizar la animación de herido y muerte
-                player.animator.SetTrigger("hurt");
-                player.animator.SetBool("dead", true);
+                    // Deshabilitar el control del jugador
+                    player.controlEnabled = false;
 
-                // Programar el evento de reaparición después de un tiempo
-                Simulation.Schedule<PlayerSpawn>(2);
+                    // Realizar la animación de herido y muerte
+                    player.animator.SetTrigger("hurt");
+                    player.animator.SetBool("dead", true);
+
+                    // Programar el evento de reaparición después de un tiempo
+                    Simulation.Schedule<PlayerSpawn>(2);
+                }
+                else
+                {
+                    // Solo daño, no muerte
+                    player.animator.SetTrigger("hurt");
+
+                    // Programar recuperación después de un tiempo
+                    Simulation.Schedule<EnablePlayerInput>(1f);
+                }
             }
         }
     }
