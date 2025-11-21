@@ -171,7 +171,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72a4a2a7a6c82aa44997c98e5c81cbdb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 15
+  moveSpeed: 10
   jumpForce: 25
   jumpCooldown: 1
   decisionRate: 0.3
@@ -183,8 +183,20 @@ MonoBehaviour:
   questionAnswerDelay: 1.5
   isPlayerControlled: 0
   controlsEnabled: 1
+  playerNumber: 2
+  useMultiKeyboardSystem: 1
   originalScale: {x: 0, y: 0, z: 0}
   canPassThroughPlayers: 1
+  canPassThroughBots: 1
+  canPassThroughWalls: 1
+  ignoreCheckpointsInAIMode: 1
+  isFloating: 0
+  floatSpeed: 3
+  ignoreObstaclesWhenFloating: 1
+  showGameOverMessage: 1
+  messageDisplayTime: 5
+  messageColor: {r: 1, g: 0, b: 0, a: 1}
+  messageFontSize: 32
   groundCheck: {fileID: 0}
   groundCheckRadius: 0.2
   groundLayerMask:

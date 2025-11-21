@@ -4,9 +4,9 @@ using System.Collections;
 public class BotController : MonoBehaviour
 {
     [Header("Bot Movement Settings")]
-    public float moveSpeed = 15f;
-    public float jumpForce = 25f;
-    public float jumpCooldown = 0.8f;
+    public float moveSpeed = 0.5f; // ✅ VELOCIDAD REDUCIDA (era 1f)
+    public float jumpForce = 15f;
+    public float jumpCooldown = 3f;
     public float decisionRate = 0.3f;
 
     [Header("Bot Behavior")]
@@ -17,7 +17,6 @@ public class BotController : MonoBehaviour
     public bool autoNavigateToGoal = true;
     public Transform goalTarget;
     public float goalReachTime = 120f;
-    private float calculatedSpeed = 0f;
     private bool isNavigatingToGoal = false;
     private Vector3 startPositionForGoal;
 
@@ -29,7 +28,7 @@ public class BotController : MonoBehaviour
     public bool controlsEnabled = true;
 
     [Header("Multi-Keyboard Settings")]
-    public int playerNumber = 2; // 1 para Player1, 2 para Player2
+    public int playerNumber = 2;
     public bool useMultiKeyboardSystem = true;
 
     [Header("Scale Protection")]
@@ -39,6 +38,7 @@ public class BotController : MonoBehaviour
     [Header("Collision Settings")]
     public bool canPassThroughPlayers = true;
     public bool canPassThroughBots = true;
+    public bool canPassThroughWalls = true;
 
     [Header("Checkpoint Behavior")]
     public bool ignoreCheckpointsInAIMode = true;
@@ -67,26 +67,22 @@ public class BotController : MonoBehaviour
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayerMask = 1;
 
-    // VARIABLES PARA SISTEMA DE CHECKPOINTS
     private bool isAnsweringChallenge = false;
     private Checkpoint currentCheckpoint;
     private SequenceChallengeManager challengeManager;
-
-    // ✅ NUEVA VARIABLE: Ignorar checkpoints en modo bot
     private bool shouldIgnoreCheckpoints = true;
-
-    // ✅ NUEVAS VARIABLES: Para navegación mejorada durante flotación
     private float floatingStartTime;
     private Vector3 lastPosition;
     private float stuckTimer = 0f;
     private float maxStuckTime = 3f;
     private bool isStuck = false;
-
-    // ✅ NUEVAS VARIABLES: Para mensaje de Game Over
     private bool gameOver = false;
     private float gameOverTime = 0f;
     private string gameOverMessage = "";
     private GUIStyle gameOverStyle;
+    private float constantSpeed = 4f; // ✅ VELOCIDAD REDUCIDA (era 8f)
+    private float wallCollisionTime = 0f;
+    private float wallCollisionCooldown = 0.5f;
 
     void Start()
     {
@@ -104,16 +100,18 @@ public class BotController : MonoBehaviour
             groundCheck = groundCheckObj.transform;
         }
 
-        // CONFIGURACIÓN DE FÍSICA MEJORADA
         if (rb != null)
         {
             rb.gravityScale = 4f;
-            rb.drag = 0.5f;
+            rb.drag = 0f;
             rb.angularDrag = 0f;
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         }
 
-        // VERIFICAR CONFIGURACIÓN DE CAPAS
+        constantSpeed = moveSpeed;
+
         if (groundLayerMask.value == 0)
         {
             Debug.LogWarning("⚠️ groundLayerMask no está configurado! Usando capa por defecto.");
@@ -126,29 +124,24 @@ public class BotController : MonoBehaviour
             Debug.LogWarning("⚠️ SequenceChallengeManager no encontrado en la escena");
         }
 
-        // ✅ CONFIGURAR IGNORAR CHECKPOINTS AUTOMÁTICAMENTE EN MODO IA
         if (!isPlayerControlled)
         {
             shouldIgnoreCheckpoints = ignoreCheckpointsInAIMode;
             Debug.Log($"🤖 Bot configurado para IGNORAR checkpoints: {shouldIgnoreCheckpoints}");
         }
 
-        // ✅ CONFIGURAR COLISIONES - DEBE SER LO PRIMERO
         SetupAllCollisions();
 
-        // ✅ BUSCAR META AUTOMÁTICAMENTE
         if (goalTarget == null)
         {
             FindGoalTarget();
         }
 
-        // ✅ SI NO SE ENCUENTRA META, CREAR UNA TEMPORAL
         if (goalTarget == null && !isPlayerControlled && autoNavigateToGoal)
         {
             CreateTemporaryGoal();
         }
 
-        // ✅ CONFIGURAR NAVEGACIÓN A META SI ES IA
         if (!isPlayerControlled && autoNavigateToGoal && goalTarget != null)
         {
             SetupGoalNavigation();
@@ -159,16 +152,16 @@ public class BotController : MonoBehaviour
             FindPlayerTarget();
         }
 
-        // Asegurar que no esté saltando al inicio
         canJump = true;
         isGrounded = false;
 
-        // Forzar verificación de suelo después de un breve delay
         StartCoroutine(InitialGroundCheck());
 
         Debug.Log($"🤖 Bot inicializado - Control: {(isPlayerControlled ? "JUGADOR" : "IA")}");
         Debug.Log($"📏 Escala original: {originalScale}");
         Debug.Log($"🔍 Configuración de detección de suelo - LayerMask: {groundLayerMask.value}");
+        Debug.Log($"🏃 Velocidad constante configurada: {constantSpeed}");
+        Debug.Log($"🧱 Atravesar paredes: {canPassThroughWalls}");
     }
 
     IEnumerator InitialGroundCheck()
@@ -177,7 +170,6 @@ public class BotController : MonoBehaviour
         UpdateGroundDetection();
     }
 
-    // ✅ MÉTODO MEJORADO: Configurar TODAS las colisiones
     private void SetupAllCollisions()
     {
         if (collider2d == null)
@@ -188,14 +180,13 @@ public class BotController : MonoBehaviour
 
         Debug.Log($"🔧 Configurando colisiones para Bot: {gameObject.name}");
 
-        // Buscar TODOS los jugadores en la escena
         PlayerController[] allPlayers = FindObjectsOfType<PlayerController>();
         BotController[] allBots = FindObjectsOfType<BotController>();
 
         int playersIgnored = 0;
         int botsIgnored = 0;
+        int wallsIgnored = 0;
 
-        // ✅ DESACTIVAR COLISIONES CON PLAYERS
         foreach (PlayerController player in allPlayers)
         {
             Collider2D playerCollider = player.GetComponent<Collider2D>();
@@ -207,7 +198,6 @@ public class BotController : MonoBehaviour
             }
         }
 
-        // ✅ DESACTIVAR COLISIONES CON OTROS BOTS (si está configurado)
         if (canPassThroughBots)
         {
             foreach (BotController otherBot in allBots)
@@ -225,29 +215,53 @@ public class BotController : MonoBehaviour
             }
         }
 
-        Debug.Log($"✅ Colisiones configuradas - Players ignorados: {playersIgnored}, Bots ignorados: {botsIgnored}");
+        if (canPassThroughWalls)
+        {
+            GameObject[] allObjects = FindObjectsOfType<GameObject>();
+            foreach (GameObject obj in allObjects)
+            {
+                if (obj.name.ToLower().Contains("wall") ||
+                    obj.name.ToLower().Contains("pared") ||
+                    obj.name.ToLower().Contains("obstacle") ||
+                    obj.name.ToLower().Contains("obstaculo") ||
+                    obj.name.ToLower().Contains("barrier") ||
+                    obj.name.ToLower().Contains("barrera") ||
+                    obj.name.ToLower().Contains("block") ||
+                    obj.name.ToLower().Contains("bloque"))
+                {
+                    Collider2D objCollider = obj.GetComponent<Collider2D>();
+                    if (objCollider != null && objCollider != collider2d)
+                    {
+                        Physics2D.IgnoreCollision(collider2d, objCollider, true);
+                        wallsIgnored++;
+                        Debug.Log($"🧱 Bot {gameObject.name} ahora atraviesa: {obj.name}");
+                    }
+                }
+            }
 
-        // ✅ CONFIGURAR LAYERS PARA EVITAR COLISIONES
+            Debug.Log($"🧱 Paredes/obstáculos ignorados: {wallsIgnored}");
+        }
+
+        Debug.Log($"✅ Colisiones configuradas - Players ignorados: {playersIgnored}, Bots ignorados: {botsIgnored}, Paredes ignoradas: {wallsIgnored}");
+
         SetupLayerCollisions();
     }
 
-    // ✅ NUEVO MÉTODO: Configurar colisiones por layers
     private void SetupLayerCollisions()
     {
-        // Asegurar que el bot esté en una layer específica
         string botLayerName = "Bot";
         int botLayer = LayerMask.NameToLayer(botLayerName);
 
         if (botLayer == -1)
         {
-            Debug.LogWarning($"⚠️ Layer '{botLayerName}' no existe. Creándola...");
-            // En un proyecto real, deberías crear la layer manualmente en Project Settings
-            botLayer = 8; // Asumiendo que la layer 8 está disponible
+            Debug.LogWarning($"⚠️ Layer '{botLayerName}' no existe. Usando layer por defecto.");
+            botLayer = gameObject.layer;
+        }
+        else
+        {
+            gameObject.layer = botLayer;
         }
 
-        gameObject.layer = botLayer;
-
-        // Desactivar colisiones con layers de players
         int playerLayer = LayerMask.NameToLayer("Player");
         int defaultLayer = LayerMask.NameToLayer("Default");
 
@@ -257,9 +271,19 @@ public class BotController : MonoBehaviour
             Debug.Log($"🎯 Colisiones desactivadas entre layers: Bot <> Player");
         }
 
-        if (defaultLayer != -1 && defaultLayer != botLayer)
+        if (canPassThroughWalls)
         {
-            Physics2D.IgnoreLayerCollision(botLayer, defaultLayer, false); // Mantener colisión con suelo
+            string[] possibleWallLayers = { "Wall", "Walls", "Obstacle", "Obstacles", "Barrier", "Block" };
+
+            foreach (string layerName in possibleWallLayers)
+            {
+                int wallLayer = LayerMask.NameToLayer(layerName);
+                if (wallLayer != -1)
+                {
+                    Physics2D.IgnoreLayerCollision(botLayer, wallLayer, true);
+                    Debug.Log($"🧱 Colisiones desactivadas entre layers: Bot <> {layerName}");
+                }
+            }
         }
 
         Debug.Log($"🏷️ Bot {gameObject.name} asignado a layer: {LayerMask.LayerToName(gameObject.layer)}");
@@ -267,13 +291,21 @@ public class BotController : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Usar FixedUpdate para física más estable
         UpdateGroundDetection();
 
-        // ✅ NUEVO: Verificar si está atascado durante flotación
         if (isFloating && isNavigatingToGoal)
         {
             CheckIfStuck();
+        }
+
+        if (!isPlayerControlled && controlsEnabled && isNavigatingToGoal && goalTarget != null && !isAnsweringChallenge)
+        {
+            ApplyConstantSpeed();
+        }
+
+        if (!isPlayerControlled && controlsEnabled && isNavigatingToGoal && !isAnsweringChallenge)
+        {
+            ForceMovementThroughWalls();
         }
     }
 
@@ -301,43 +333,52 @@ public class BotController : MonoBehaviour
         }
     }
 
-    // ========================================
-    // MÉTODOS DE DEBUG MEJORADOS
-    // ========================================
+    void ForceMovementThroughWalls()
+    {
+        if (goalTarget == null || rb == null) return;
+
+        if (Mathf.Abs(rb.velocity.x) < 0.5f && Time.time - wallCollisionTime > wallCollisionCooldown)
+        {
+            Vector3 targetPosition = new Vector3(goalTarget.position.x, goalTarget.position.y, transform.position.z);
+            Vector2 direction = (targetPosition - transform.position).normalized;
+
+            rb.AddForce(new Vector2(direction.x * constantSpeed * 100f, 0f));
+
+            wallCollisionTime = Time.time;
+
+            Debug.Log($"🚧 Bot empujando a través de obstáculo - Aplicando fuerza extra");
+        }
+    }
 
     void DebugBotState()
     {
-        if (Time.frameCount % 120 == 0) // Log cada 120 frames para no saturar
+        if (Time.frameCount % 120 == 0)
         {
             string floatingStatus = isFloating ? "🎈 FLOTANDO" : "⬇️ NORMAL";
             string groundedStatus = isGrounded ? "🏠 EN SUELO" : "🌪️ EN AIRE";
             string stuckStatus = isStuck ? "🚧 ATASCADO" : "🏃 MOVIÉNDOSE";
 
             Debug.Log($"🤖 Estado Bot - {floatingStatus}, {groundedStatus}, {stuckStatus}, " +
+                     $"VelX: {(rb != null ? rb.velocity.x.ToString("F2") : "N/A")}, " +
                      $"VelY: {(rb != null ? rb.velocity.y.ToString("F2") : "N/A")}, " +
-                     $"PosY: {transform.position.y:F2}");
+                     $"PosX: {transform.position.x:F2}");
         }
     }
 
     void DebugGoalNavigation()
     {
-        if (Time.frameCount % 120 == 0) // Log cada 120 frames
+        if (Time.frameCount % 120 == 0)
         {
             string floatingStatus = isFloating ? "🎈 FLOTANDO" : "⬇️ NORMAL";
 
             Debug.Log($"🎯 DEBUG META - {floatingStatus}, GoalTarget: {(goalTarget != null ? goalTarget.name : "NULL")}, " +
                      $"Navigating: {isNavigatingToGoal}, AutoNavigate: {autoNavigateToGoal}, " +
-                     $"PlayerControl: {isPlayerControlled}");
+                     $"Velocidad: {constantSpeed}");
 
             if (goalTarget != null)
             {
                 float distance = Vector2.Distance(transform.position, goalTarget.position);
-                Debug.Log($"📍 Distancia a meta: {distance:F2}, Posición Y: {transform.position.y:F2}");
-            }
-
-            if (rb != null)
-            {
-                Debug.Log($"🏃 Velocidad Bot - X: {rb.velocity.x:F2}, Y: {rb.velocity.y:F2}");
+                Debug.Log($"📍 Distancia a meta: {distance:F2}, Posición X: {transform.position.x:F2}");
             }
         }
     }
@@ -376,11 +417,9 @@ public class BotController : MonoBehaviour
             bool wasGrounded = isGrounded;
             isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayerMask);
 
-            // DEBUG VISUAL
             Debug.DrawRay(groundCheck.position, Vector2.down * groundCheckRadius,
                          isGrounded ? Color.green : Color.red);
 
-            // Si acaba de tocar el suelo, permitir saltar nuevamente
             if (!wasGrounded && isGrounded)
             {
                 canJump = true;
@@ -392,7 +431,41 @@ public class BotController : MonoBehaviour
         }
     }
 
-    // CONTROL POR JUGADOR HUMANO (PLAYER2) - MODIFICADO PARA MULTI-TECLADO
+    void ApplyConstantSpeed()
+    {
+        if (goalTarget == null || rb == null) return;
+
+        Vector3 targetPosition = new Vector3(goalTarget.position.x, goalTarget.position.y, transform.position.z);
+        Vector2 direction = (targetPosition - transform.position).normalized;
+
+        float currentSpeed = constantSpeed;
+
+        rb.velocity = new Vector2(direction.x * currentSpeed, rb.velocity.y);
+
+        if (direction.x > 0.1f)
+        {
+            transform.localScale = new Vector3(Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
+        }
+        else if (direction.x < -0.1f)
+        {
+            transform.localScale = new Vector3(-Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
+        }
+
+        if (isGrounded && canJump && Mathf.Abs(rb.velocity.y) < 0.1f && !isFloating)
+        {
+            if (Random.Range(0, 100) < 2)
+            {
+                Jump();
+            }
+        }
+
+        float distanceToGoal = Vector2.Distance(transform.position, targetPosition);
+        if (distanceToGoal < 2f)
+        {
+            OnReachGoal();
+        }
+    }
+
     void HandlePlayerControl()
     {
         float moveHorizontal = 0f;
@@ -401,14 +474,12 @@ public class BotController : MonoBehaviour
 
         if (useMultiKeyboardSystem && MultiKeyboardInputManager.Instance != null)
         {
-            // Usar el nuevo sistema de múltiples teclados
             moveHorizontal = MultiKeyboardInputManager.Instance.GetHorizontal(playerNumber);
             jumpPressed = MultiKeyboardInputManager.Instance.GetJump(playerNumber);
             jumpHeld = MultiKeyboardInputManager.Instance.GetJumpHeld(playerNumber);
         }
         else
         {
-            // Sistema antiguo (compatibilidad)
             moveHorizontal = Input.GetAxis("Horizontal_P2");
             jumpPressed = Input.GetButtonDown("Jump_P2");
             jumpHeld = Input.GetButton("Jump_P2");
@@ -449,21 +520,17 @@ public class BotController : MonoBehaviour
         }
     }
 
-    // COMPORTAMIENTO DE IA
     void MakeDecision()
     {
         if (Time.time - lastDecisionTime < decisionRate) return;
 
         lastDecisionTime = Time.time;
 
-        // ✅ SI ESTÁ EN MODO NAVEGACIÓN A META, IR DIRECTO A LA META
         if (!isPlayerControlled && isNavigatingToGoal && goalTarget != null)
         {
-            MoveTowardsGoal();
             return;
         }
 
-        // Comportamiento normal de seguir al jugador
         if (playerTarget == null)
         {
             FindPlayerTarget();
@@ -485,10 +552,9 @@ public class BotController : MonoBehaviour
             RandomMovement();
         }
 
-        // MEJORAR LÓGICA DE SALTO - SOLO SALTAR SI ESTÁ EN SUELO Y NO ESTÁ YA SALTANDO
         if (isGrounded && canJump && Mathf.Abs(rb.velocity.y) < 0.1f && !isFloating)
         {
-            if (Random.Range(0, 100) < 20) // Reducir probabilidad de salto
+            if (Random.Range(0, 100) < 5)
             {
                 Jump();
             }
@@ -500,7 +566,7 @@ public class BotController : MonoBehaviour
         if (playerTarget == null || rb == null) return;
 
         Vector2 direction = (playerTarget.position - transform.position).normalized;
-        rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
+        rb.velocity = new Vector2(direction.x * constantSpeed, rb.velocity.y);
 
         if (direction.x > 0.1f)
         {
@@ -517,7 +583,7 @@ public class BotController : MonoBehaviour
         if (playerTarget == null || rb == null) return;
 
         Vector2 direction = (transform.position - playerTarget.position).normalized;
-        rb.velocity = new Vector2(direction.x * moveSpeed, rb.velocity.y);
+        rb.velocity = new Vector2(direction.x * constantSpeed, rb.velocity.y);
 
         if (direction.x > 0.1f)
         {
@@ -536,7 +602,7 @@ public class BotController : MonoBehaviour
         if (Random.Range(0, 100) < 20)
         {
             float randomDirection = Random.Range(-1f, 1f);
-            rb.velocity = new Vector2(randomDirection * moveSpeed * 0.5f, rb.velocity.y);
+            rb.velocity = new Vector2(randomDirection * constantSpeed * 0.5f, rb.velocity.y);
 
             if (randomDirection > 0.1f)
             {
@@ -585,15 +651,10 @@ public class BotController : MonoBehaviour
         }
     }
 
-    // ========================================
-    // SISTEMA DE NAVEGACIÓN A META MEJORADO
-    // ========================================
-
     void FindGoalTarget()
     {
         Debug.Log("🔍 Buscando meta automáticamente...");
 
-        // Buscar por tag "Finish" o "Goal"
         GameObject goal = GameObject.FindGameObjectWithTag("Finish");
         if (goal == null)
         {
@@ -601,7 +662,6 @@ public class BotController : MonoBehaviour
             Debug.Log("🔍 Buscando con tag 'Goal'...");
         }
 
-        // Buscar por nombre "FinishLine" o similar
         if (goal == null)
         {
             goal = GameObject.Find("FinishLine");
@@ -620,10 +680,8 @@ public class BotController : MonoBehaviour
             Debug.Log("🔍 Buscando objeto 'Meta'...");
         }
 
-        // BUSCAR POR TIPO si no se encuentra por nombre/tag
         if (goal == null)
         {
-            // Buscar cualquier objeto que pueda ser la meta
             GameObject[] allObjects = FindObjectsOfType<GameObject>();
             foreach (GameObject obj in allObjects)
             {
@@ -658,7 +716,6 @@ public class BotController : MonoBehaviour
         GameObject tempGoal = new GameObject("TemporaryGoal");
         tempGoal.tag = "Finish";
 
-        // Colocar la meta a una distancia razonable del bot (50 unidades a la derecha)
         Vector3 goalPosition = transform.position + new Vector3(50f, 0f, 0f);
         tempGoal.transform.position = goalPosition;
 
@@ -666,7 +723,6 @@ public class BotController : MonoBehaviour
 
         Debug.Log($"🎯 Meta temporal creada en posición: {goalPosition}");
 
-        // Configurar navegación
         if (!isPlayerControlled && autoNavigateToGoal)
         {
             SetupGoalNavigation();
@@ -678,120 +734,42 @@ public class BotController : MonoBehaviour
         if (goalTarget == null)
         {
             Debug.LogWarning("⚠️ No se puede configurar navegación: goalTarget es null");
-            FindGoalTarget(); // Buscar nuevamente
+            FindGoalTarget();
             if (goalTarget == null) return;
         }
 
         isNavigatingToGoal = true;
         startPositionForGoal = transform.position;
 
-        // Calcular distancia total a la meta
-        float distanceToGoal = Vector2.Distance(startPositionForGoal, goalTarget.position);
-
-        // Calcular velocidad necesaria para llegar en exactamente goalReachTime segundos
-        calculatedSpeed = distanceToGoal / goalReachTime;
-
-        // Asegurar velocidad mínima
-        if (calculatedSpeed < 5f) calculatedSpeed = 5f;
+        constantSpeed = moveSpeed;
 
         Debug.Log($"🚀 Bot navegando a meta automáticamente");
-        Debug.Log($"📍 Distancia a meta: {distanceToGoal:F2} unidades");
-        Debug.Log($"⏱️ Tiempo objetivo: {goalReachTime} segundos");
-        Debug.Log($"🏃 Velocidad calculada: {calculatedSpeed:F2} unidades/segundo");
+        Debug.Log($"📍 Distancia a meta: {Vector2.Distance(startPositionForGoal, goalTarget.position):F2} unidades");
+        Debug.Log($"🏃 VELOCIDAD CONSTANTE: {constantSpeed} unidades/segundo");
         Debug.Log($"🎯 Posición meta: {goalTarget.position}");
     }
 
     void MoveTowardsGoal()
     {
-        if (goalTarget == null || rb == null)
-        {
-            Debug.LogWarning("⚠️ No se puede mover a meta: goalTarget o rb es null");
-            return;
-        }
-
-        // ✅ SI ESTÁ FLOTANDO, COMPORTAMIENTO ESPECIAL
-        if (isFloating)
-        {
-            MoveWhileFloating();
-            return;
-        }
-
-        // Calcular dirección hacia la meta (ignorando Z)
-        Vector3 targetPosition = new Vector3(goalTarget.position.x, goalTarget.position.y, transform.position.z);
-        Vector2 direction = (targetPosition - transform.position).normalized;
-
-        // DEBUG de dirección
-        if (Time.frameCount % 60 == 0)
-        {
-            Debug.Log($"🧭 Dirección a meta: ({direction.x:F2}, {direction.y:F2}), " +
-                     $"Distancia: {Vector2.Distance(transform.position, targetPosition):F2}");
-            Debug.Log($"🎯 Posición Meta: {goalTarget.position}, Posición Bot: {transform.position}");
-        }
-
-        // Mover hacia la meta con la velocidad calculada
-        float currentSpeed = Mathf.Max(calculatedSpeed, 5f); // Velocidad mínima
-        rb.velocity = new Vector2(direction.x * currentSpeed, rb.velocity.y);
-
-        // Voltear sprite según dirección
-        if (direction.x > 0.1f)
-        {
-            transform.localScale = new Vector3(Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
-        }
-        else if (direction.x < -0.1f)
-        {
-            transform.localScale = new Vector3(-Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
-        }
-
-        // Saltar solo si hay obstáculos y está en suelo
-        if (isGrounded && canJump && ShouldJumpForObstacle() && Mathf.Abs(rb.velocity.y) < 0.1f)
-        {
-            // Reducir probabilidad de salto para evitar saltos constantes
-            if (Random.Range(0, 100) < 40) // 40% de probabilidad
-            {
-                Jump();
-            }
-        }
-
-        // Verificar si llegó a la meta (usando posición corregida)
-        float distanceToGoal = Vector2.Distance(transform.position, targetPosition);
-        if (distanceToGoal < 2f) // Aumentar rango de detección
-        {
-            OnReachGoal();
-        }
     }
 
-    // ✅ NUEVO MÉTODO MEJORADO: Movimiento mientras flota - IGNORA OBSTÁCULOS
     void MoveWhileFloating()
     {
         if (goalTarget == null || rb == null) return;
 
-        // Calcular dirección hacia la meta (ignorando Z)
         Vector3 targetPosition = new Vector3(goalTarget.position.x, goalTarget.position.y, transform.position.z);
         Vector2 direction = (targetPosition - transform.position).normalized;
 
-        // ✅ NUEVO: Si está atascado, intentar una ruta alternativa
         if (isStuck)
         {
             HandleStuckSituation(direction);
             return;
         }
 
-        // ✅ MEJORADO: Fuerza de movimiento más agresiva durante flotación
-        float currentSpeed = Mathf.Max(calculatedSpeed * 1.5f, 8f); // Mayor velocidad cuando flota
+        float currentSpeed = constantSpeed;
 
-        // ✅ MEJORADO: Aplicar fuerza constante en lugar de solo velocidad
-        Vector2 desiredVelocity = new Vector2(direction.x * currentSpeed, floatSpeed);
+        rb.velocity = new Vector2(direction.x * currentSpeed, floatSpeed);
 
-        // Suavizar el movimiento pero mantener fuerza constante
-        rb.velocity = Vector2.Lerp(rb.velocity, desiredVelocity, 0.3f);
-
-        // ✅ NUEVO: Fuerza adicional si se está moviendo muy lento
-        if (Mathf.Abs(rb.velocity.x) < 2f)
-        {
-            rb.AddForce(new Vector2(direction.x * currentSpeed * 10f, 0f));
-        }
-
-        // Voltear sprite según dirección horizontal
         if (direction.x > 0.1f)
         {
             transform.localScale = new Vector3(Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
@@ -801,14 +779,12 @@ public class BotController : MonoBehaviour
             transform.localScale = new Vector3(-Mathf.Abs(originalScale.x), originalScale.y, originalScale.z);
         }
 
-        // Debug de flotación
         if (Time.frameCount % 60 == 0)
         {
             Debug.Log($"🎈 Bot FLOTANDO - Velocidad: ({rb.velocity.x:F2}, {rb.velocity.y:F2}), " +
-                     $"Fuerza X: {direction.x * currentSpeed:F2}, Posición Y: {transform.position.y:F2}");
+                     $"Posición X: {transform.position.x:F2}");
         }
 
-        // Verificar si llegó a la meta
         float distanceToGoal = Vector2.Distance(transform.position, targetPosition);
         if (distanceToGoal < 2f)
         {
@@ -816,27 +792,22 @@ public class BotController : MonoBehaviour
         }
     }
 
-    // ✅ NUEVO MÉTODO: Manejar situación de atascamiento
     void HandleStuckSituation(Vector2 originalDirection)
     {
         Debug.Log($"🔄 Bot ATASCADO - Intentando solución...");
 
-        // ✅ ESTRATEGIA 1: Intentar moverse más arriba
         if (rb.velocity.y < floatSpeed * 0.5f)
         {
             rb.velocity = new Vector2(rb.velocity.x, floatSpeed * 1.5f);
             Debug.Log($"⬆️ Intentando subir más alto...");
         }
 
-        // ✅ ESTRATEGIA 2: Movimiento lateral más agresivo
-        float aggressiveSpeed = calculatedSpeed * 2f;
+        float aggressiveSpeed = constantSpeed * 2f;
         rb.AddForce(new Vector2(originalDirection.x * aggressiveSpeed * 20f, 0f));
 
-        // ✅ ESTRATEGIA 3: Pequeño movimiento aleatorio para desatascar
         Vector2 randomDirection = new Vector2(originalDirection.x + Random.Range(-0.5f, 0.5f), 1f).normalized;
         rb.AddForce(randomDirection * aggressiveSpeed * 5f);
 
-        // ✅ ESTRATEGIA 4: Temporizador para resetear el stuck
         stuckTimer += Time.deltaTime;
         if (stuckTimer > maxStuckTime)
         {
@@ -844,28 +815,23 @@ public class BotController : MonoBehaviour
             isStuck = false;
             stuckTimer = 0f;
 
-            // Dar un impulso fuerte
-            rb.velocity = new Vector2(originalDirection.x * calculatedSpeed * 3f, floatSpeed * 2f);
+            rb.velocity = new Vector2(originalDirection.x * constantSpeed * 3f, floatSpeed * 2f);
         }
     }
 
-    // ✅ NUEVO MÉTODO: Verificar si el bot está atascado
     void CheckIfStuck()
     {
-        // Guardar posición actual
         Vector3 currentPosition = transform.position;
 
-        // Verificar si se está moviendo muy lento
         bool isMovingVerySlow = rb.velocity.magnitude < 1f;
 
-        // Verificar si la posición no ha cambiado significativamente
         bool positionNotChanging = Vector3.Distance(currentPosition, lastPosition) < 0.1f;
 
         if ((isMovingVerySlow || positionNotChanging) && !isStuck)
         {
             stuckTimer += Time.deltaTime;
 
-            if (stuckTimer > 1.5f) // 1.5 segundos de inmovilidad
+            if (stuckTimer > 1.5f)
             {
                 isStuck = true;
                 Debug.Log($"🚧 Bot DETECTADO COMO ATASCADO - Velocidad: {rb.velocity.magnitude:F2}");
@@ -873,23 +839,21 @@ public class BotController : MonoBehaviour
         }
         else if (!isMovingVerySlow && !positionNotChanging)
         {
-            // Se está moviendo normalmente, resetear timer
             stuckTimer = 0f;
             isStuck = false;
         }
 
-        // Actualizar última posición
         lastPosition = currentPosition;
     }
 
     bool ShouldJumpForObstacle()
     {
-        // No saltar si está flotando
         if (isFloating) return false;
 
-        // Raycast hacia adelante para detectar obstáculos
+        if (Mathf.Abs(rb.velocity.x) < 0.1f) return false;
+
         Vector2 direction = transform.localScale.x > 0 ? Vector2.right : Vector2.left;
-        float rayDistance = 2f; // Aumentar distancia de detección
+        float rayDistance = 1.0f;
 
         Debug.DrawRay(transform.position, direction * rayDistance, Color.yellow);
 
@@ -897,39 +861,43 @@ public class BotController : MonoBehaviour
 
         if (hit.collider != null)
         {
-            Debug.Log($"🚧 Obstáculo detectado: {hit.collider.gameObject.name} a distancia {hit.distance:F2}");
-            return true;
+            if (hit.distance < 0.5f)
+            {
+                float obstacleHeight = hit.collider.bounds.size.y;
+                if (obstacleHeight > 0.5f)
+                {
+                    Debug.Log($"🚧 Obstáculo detectado: {hit.collider.gameObject.name} a distancia {hit.distance:F2} - SALTANDO");
+                    return true;
+                }
+            }
         }
 
         return false;
     }
 
-    // ✅ MÉTODO MEJORADO: Cuando llega a la meta
     void OnReachGoal()
     {
         isNavigatingToGoal = false;
         hasReachedGoal = true;
-        isStuck = false; // Resetear estado de atascamiento
+        isStuck = false;
 
         if (rb != null)
         {
             rb.velocity = Vector2.zero;
 
-            // ✅ Restaurar gravedad si estaba flotando
             if (isFloating)
             {
                 SetFloatingMode(false);
             }
         }
 
-        // ✅ NUEVO: Mostrar mensaje de Game Over
         ShowGameOverMessage();
 
         Debug.Log($"🎉 ¡Bot llegó a la meta!");
         Debug.Log($"⏱️ Tiempo transcurrido: {Time.time} segundos");
+        Debug.Log($"🏃 Velocidad final: {constantSpeed}");
     }
 
-    // ✅ NUEVO MÉTODO: Mostrar mensaje de Game Over
     void ShowGameOverMessage()
     {
         if (!showGameOverMessage) return;
@@ -940,17 +908,11 @@ public class BotController : MonoBehaviour
 
         Debug.Log($"🎮 {gameOverMessage}");
 
-        // ✅ Desactivar controles del jugador si existe
         DisablePlayerControls();
-
-        // ✅ Opcional: Pausar el juego
-        // Time.timeScale = 0f;
     }
 
-    // ✅ NUEVO MÉTODO: Desactivar controles del jugador
     void DisablePlayerControls()
     {
-        // Buscar y desactivar controles del Player1
         PlayerController player1 = FindObjectOfType<PlayerController>();
         if (player1 != null)
         {
@@ -958,7 +920,6 @@ public class BotController : MonoBehaviour
             Debug.Log($"🎮 Controles de Player1 desactivados");
         }
 
-        // Buscar y desactivar otros bots controlados por jugador
         BotController[] allBots = FindObjectsOfType<BotController>();
         foreach (BotController bot in allBots)
         {
@@ -970,19 +931,16 @@ public class BotController : MonoBehaviour
         }
     }
 
-    // ✅ NUEVO MÉTODO: Dibujar mensaje de Game Over en pantalla
     void OnGUI()
     {
         if (!gameOver || !showGameOverMessage) return;
 
-        // Verificar si el mensaje aún debe mostrarse
         if (Time.time - gameOverTime > messageDisplayTime)
         {
             gameOver = false;
             return;
         }
 
-        // Crear estilo para el mensaje si no existe
         if (gameOverStyle == null)
         {
             gameOverStyle = new GUIStyle(GUI.skin.label);
@@ -992,21 +950,17 @@ public class BotController : MonoBehaviour
             gameOverStyle.normal.textColor = messageColor;
         }
 
-        // Calcular posición centrada
         float screenWidth = Screen.width;
         float screenHeight = Screen.height;
 
         Rect messageRect = new Rect(0, screenHeight * 0.3f, screenWidth, 150);
 
-        // Fondo semi-transparente
         GUI.color = new Color(0, 0, 0, 0.7f);
         GUI.Box(new Rect(0, screenHeight * 0.3f - 10, screenWidth, 170), "");
         GUI.color = Color.white;
 
-        // Mostrar mensaje
         GUI.Label(messageRect, gameOverMessage, gameOverStyle);
 
-        // Mostrar mensaje adicional más pequeño
         GUIStyle smallStyle = new GUIStyle(GUI.skin.label);
         smallStyle.alignment = TextAnchor.MiddleCenter;
         smallStyle.fontSize = 18;
@@ -1016,7 +970,6 @@ public class BotController : MonoBehaviour
         GUI.Label(subMessageRect, $"Tiempo: {Time.time:F1} segundos", smallStyle);
     }
 
-    // Método público para activar/desactivar navegación a meta
     public void SetAutoNavigateToGoal(bool navigate)
     {
         autoNavigateToGoal = navigate;
@@ -1033,20 +986,19 @@ public class BotController : MonoBehaviour
         Debug.Log($"🤖 Bot auto-navegación a meta: {(navigate ? "ACTIVADA" : "DESACTIVADA")}");
     }
 
-    // Método público para cambiar el tiempo objetivo
+    public void SetConstantSpeed(float speed)
+    {
+        constantSpeed = speed;
+        moveSpeed = speed;
+        Debug.Log($"🏃 Velocidad constante configurada a: {constantSpeed}");
+    }
+
     public void SetGoalReachTime(float seconds)
     {
         goalReachTime = seconds;
-
-        if (isNavigatingToGoal && goalTarget != null)
-        {
-            SetupGoalNavigation(); // Recalcular velocidad
-        }
-
-        Debug.Log($"⏱️ Tiempo objetivo cambiado a: {seconds} segundos ({seconds / 60f:F1} minutos)");
+        Debug.Log($"⏱️ Tiempo objetivo cambiado a: {seconds} segundos");
     }
 
-    // Método público para establecer meta manualmente
     public void SetGoalTarget(Transform goal)
     {
         goalTarget = goal;
@@ -1059,11 +1011,6 @@ public class BotController : MonoBehaviour
         Debug.Log($"🎯 Meta establecida manualmente: {goal.name}");
     }
 
-    // ========================================
-    // SISTEMA DE FLOTACIÓN PARA BOT
-    // ========================================
-
-    // ✅ NUEVO: Método para activar/desactivar modo flotación
     public void SetFloatingMode(bool floating, float speed = 3f)
     {
         isFloating = floating;
@@ -1080,10 +1027,8 @@ public class BotController : MonoBehaviour
             if (rb != null)
             {
                 rb.gravityScale = 0f;
-                // Aplicar velocidad inicial de flotación
                 rb.velocity = new Vector2(rb.velocity.x, floatSpeed);
 
-                // ✅ NUEVO: Impulso inicial fuerte
                 rb.AddForce(new Vector2(0f, floatSpeed * 50f));
             }
         }
@@ -1092,38 +1037,29 @@ public class BotController : MonoBehaviour
             Debug.Log($"⬇️ Bot saliendo de modo flotación - Gravedad restaurada");
             if (rb != null)
             {
-                rb.gravityScale = 4f; // Gravedad normal
+                rb.gravityScale = 4f;
             }
         }
     }
 
-    // ✅ NUEVO: Método para verificar si llegó a la meta
     public bool HasReachedGoal()
     {
         return hasReachedGoal;
     }
 
-    // ✅ NUEVO: Método para verificar si está flotando
     public bool IsFloating()
     {
         return isFloating;
     }
 
-    // ========================================
-    // SISTEMA PARA IGNORAR CHECKPOINTS EN MODO BOT
-    // ========================================
-
-    // Método público para configurar si ignora checkpoints
     public void SetIgnoreCheckpoints(bool ignore)
     {
         shouldIgnoreCheckpoints = ignore;
         Debug.Log($"🤖 Bot ignore checkpoints: {shouldIgnoreCheckpoints}");
     }
 
-    // Método para verificar si debe ignorar un checkpoint
     public bool ShouldIgnoreCheckpoint()
     {
-        // En modo IA, siempre ignorar checkpoints
         if (!isPlayerControlled && shouldIgnoreCheckpoints)
         {
             return true;
@@ -1131,10 +1067,8 @@ public class BotController : MonoBehaviour
         return false;
     }
 
-    // MÉTODOS PARA SISTEMA DE CHECKPOINTS - MODIFICADO
     public void TriggerChallenge(Checkpoint checkpoint)
     {
-        // ✅ NUEVO: Ignorar checkpoints si está en modo bot
         if (!isPlayerControlled && shouldIgnoreCheckpoints)
         {
             Debug.Log($"🚫 Bot ignorando checkpoint {checkpoint.checkpointNumber} - Yendo directo a meta");
@@ -1220,11 +1154,6 @@ public class BotController : MonoBehaviour
         Debug.Log($"✅ {(isPlayerControlled ? "Player2" : "Bot")} respondió pregunta tipo: {questionType}");
     }
 
-    // ========================================
-    // CONTROL DE JUGADOR
-    // ========================================
-
-    // ✅ MÉTODO PARA CONTROL DE JUGADOR
     public void SetPlayerControl(bool shouldBePlayerControlled)
     {
         isPlayerControlled = shouldBePlayerControlled;
@@ -1242,7 +1171,6 @@ public class BotController : MonoBehaviour
         }
     }
 
-    // MÉTODOS GETTER PARA DEBUG
     public string GetHorizontalAxis()
     {
         return "Horizontal_P2";
@@ -1288,13 +1216,11 @@ public class BotController : MonoBehaviour
 
         if (!isPlayerControlled)
         {
-            // Dibujar rangos de seguimiento al jugador
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(transform.position, followDistance);
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, attackDistance);
 
-            // Dibujar línea hacia la meta si está navegando
             if (isNavigatingToGoal && goalTarget != null)
             {
                 Gizmos.color = isFloating ? Color.magenta : Color.yellow;
@@ -1304,16 +1230,62 @@ public class BotController : MonoBehaviour
         }
     }
 
-    // ✅ NUEVO: Verificar colisiones en tiempo real
     void OnCollisionEnter2D(Collision2D collision)
     {
-        // Si el bot colisiona con un jugador, ignorar la colisión
         if (collision.gameObject.CompareTag("Player") ||
             collision.gameObject.CompareTag("Player2") ||
             collision.gameObject.GetComponent<PlayerController>() != null)
         {
             Debug.Log($"⚠️ Bot colisionó con jugador: {collision.gameObject.name} - Ignorando colisión");
             Physics2D.IgnoreCollision(collider2d, collision.collider, true);
+        }
+
+        if (canPassThroughWalls)
+        {
+            string objectName = collision.gameObject.name.ToLower();
+            if (objectName.Contains("wall") ||
+                objectName.Contains("pared") ||
+                objectName.Contains("obstacle") ||
+                objectName.Contains("obstaculo") ||
+                objectName.Contains("barrier") ||
+                objectName.Contains("barrera") ||
+                objectName.Contains("block") ||
+                objectName.Contains("bloque"))
+            {
+                Debug.Log($"🧱 Bot colisionó con pared: {collision.gameObject.name} - Ignorando colisión y continuando");
+                Physics2D.IgnoreCollision(collider2d, collision.collider, true);
+
+                if (rb != null && goalTarget != null)
+                {
+                    Vector2 direction = (goalTarget.position - transform.position).normalized;
+                    rb.AddForce(direction * constantSpeed * 150f);
+                }
+            }
+        }
+    }
+
+    void OnCollisionStay2D(Collision2D collision)
+    {
+        if (canPassThroughWalls)
+        {
+            string objectName = collision.gameObject.name.ToLower();
+            if (objectName.Contains("wall") ||
+                objectName.Contains("pared") ||
+                objectName.Contains("obstacle") ||
+                objectName.Contains("obstaculo") ||
+                objectName.Contains("barrier") ||
+                objectName.Contains("barrera") ||
+                objectName.Contains("block") ||
+                objectName.Contains("bloque"))
+            {
+                if (rb != null && goalTarget != null && isNavigatingToGoal)
+                {
+                    Vector2 direction = (goalTarget.position - transform.position).normalized;
+                    rb.AddForce(direction * constantSpeed * 50f);
+
+                    Physics2D.IgnoreCollision(collider2d, collision.collider, true);
+                }
+            }
         }
     }
 }

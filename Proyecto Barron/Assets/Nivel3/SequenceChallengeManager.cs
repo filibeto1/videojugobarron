@@ -20,6 +20,7 @@ public class PlayerChallengeState
     public Checkpoint currentCheckpoint;
     public bool isInChallenge;
     public bool isInputEnabled;
+    public bool isPanelActive;
 }
 
 public class SequenceChallengeManager : MonoBehaviour
@@ -46,6 +47,10 @@ public class SequenceChallengeManager : MonoBehaviour
     public KeyCode submitKey = KeyCode.Return;
     public bool autoFocusInputField = true;
 
+    [Header("Configuración de Validación")]
+    public bool onlyNumbers = true;
+    public int maxDigits = 3;
+
     [Header("Desafíos de Secuencia")]
     public List<SequenceChallenge> challenges = new List<SequenceChallenge>();
 
@@ -54,8 +59,7 @@ public class SequenceChallengeManager : MonoBehaviour
     private PlayerController player1Controller;
     private BotController player2Controller;
     private bool playersInitialized = false;
-    private TMP_InputField currentActiveInputField;
-    private bool isAnyPanelActive = false;
+    private List<TMP_InputField> activeInputFields = new List<TMP_InputField>();
     private bool isGameStarted = false;
 
     void Start()
@@ -83,6 +87,7 @@ public class SequenceChallengeManager : MonoBehaviour
         }
 
         SetupInputFieldListeners();
+        SetupInputFieldValidation();
         SetAllPanelsInactive();
         ShuffleChallenges();
 
@@ -121,15 +126,14 @@ public class SequenceChallengeManager : MonoBehaviour
         }
 
         ConfigureSplitScreenCameras();
+        SetupCameraFollowScripts();
     }
 
     private void ConfigureSplitScreenCameras()
     {
         if (player1Camera != null && player2Camera != null)
         {
-            // Player1Camera en la parte superior
             player1Camera.rect = new Rect(0f, 0.5f, 1f, 0.5f);
-            // Player2Camera en la parte inferior
             player2Camera.rect = new Rect(0f, 0f, 1f, 0.5f);
 
             Debug.Log("🎥 Cámaras configuradas para pantalla dividida");
@@ -138,25 +142,59 @@ public class SequenceChallengeManager : MonoBehaviour
         }
     }
 
+    private void SetupCameraFollowScripts()
+    {
+        Debug.Log("🎯 Configurando scripts de seguimiento de cámara...");
+
+        if (player1Camera != null)
+        {
+            SetupCameraForPlayer(player1Camera, "Player1", "Player1Camera");
+        }
+
+        if (player2Camera != null)
+        {
+            SetupCameraForPlayer(player2Camera, "Player2", "Player2Camera");
+        }
+    }
+
+    private void SetupCameraForPlayer(Camera camera, string targetPlayerName, string cameraName)
+    {
+        SeguirJugador followScript = camera.GetComponent<SeguirJugador>();
+        if (followScript == null)
+        {
+            followScript = camera.gameObject.AddComponent<SeguirJugador>();
+            Debug.Log($"✅ Script SeguirJugador añadido a {cameraName}");
+        }
+
+        followScript.isTopScreen = (targetPlayerName == "Player1");
+        followScript.playerTargetName = targetPlayerName;
+
+        Debug.Log($"🎯 Configurando {cameraName} para seguir a {targetPlayerName} - TopScreen: {followScript.isTopScreen}");
+
+        followScript.ForceFindTarget();
+    }
+
     private void InitializePlayerStates()
     {
         playerStates.Clear();
         playerStates.Add("Player1", new PlayerChallengeState
         {
             isInChallenge = false,
-            isInputEnabled = false
+            isInputEnabled = false,
+            isPanelActive = false
         });
         playerStates.Add("Player2", new PlayerChallengeState
         {
             isInChallenge = false,
-            isInputEnabled = false
+            isInputEnabled = false,
+            isPanelActive = false
         });
         Debug.Log("✅ Estados de jugadores inicializados: Player1 y Player2");
     }
 
     void Update()
     {
-        if (isAnyPanelActive && isGameStarted && Input.GetKeyDown(submitKey))
+        if (isGameStarted && Input.GetKeyDown(submitKey))
         {
             HandleEnterKeyPress();
         }
@@ -166,40 +204,165 @@ public class SequenceChallengeManager : MonoBehaviour
     {
         isGameStarted = true;
         Debug.Log("🎮 SequenceChallengeManager: Juego iniciado - Input habilitado");
+
+        StartCoroutine(ReinforceCameraSetup());
+    }
+
+    private IEnumerator ReinforceCameraSetup()
+    {
+        yield return new WaitForSeconds(0.5f);
+        SetupCameraFollowScripts();
     }
 
     private void HandleEnterKeyPress()
     {
         if (!isGameStarted) return;
 
-        if (challengePanel_Player1 != null && challengePanel_Player1.activeInHierarchy)
+        bool player1Active = playerStates.ContainsKey("Player1") &&
+                            playerStates["Player1"].isPanelActive &&
+                            playerStates["Player1"].isInputEnabled;
+
+        bool player2Active = playerStates.ContainsKey("Player2") &&
+                            playerStates["Player2"].isPanelActive &&
+                            playerStates["Player2"].isInputEnabled;
+
+        if (player1Active && player2Active)
         {
-            if (CanProcessInput(true))
+            GameObject focusedObject = UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
+
+            if (focusedObject == answerInput_Player1?.gameObject)
+            {
+                CheckAnswer(true);
+            }
+            else if (focusedObject == answerInput_Player2?.gameObject)
+            {
+                CheckAnswer(false);
+            }
+            else
             {
                 CheckAnswer(true);
             }
         }
-        else if (challengePanel_Player2 != null && challengePanel_Player2.activeInHierarchy)
+        else if (player1Active)
         {
-            if (CanProcessInput(false))
-            {
-                CheckAnswer(false);
-            }
+            CheckAnswer(true);
+        }
+        else if (player2Active)
+        {
+            CheckAnswer(false);
         }
     }
 
-    private bool CanProcessInput(bool isPlayer1)
+    private void SetupInputFieldValidation()
     {
-        string playerId = isPlayer1 ? "Player1" : "Player2";
+        Debug.Log("🔢 Configurando validación para solo números...");
 
-        if (!playerStates.ContainsKey(playerId))
+        if (answerInput_Player1 != null)
         {
-            Debug.LogError($"❌ {playerId} no tiene estado registrado");
-            return false;
+            answerInput_Player1.contentType = TMP_InputField.ContentType.IntegerNumber;
+            answerInput_Player1.onValidateInput = ValidateNumericInput;
+            answerInput_Player1.characterLimit = maxDigits;
+            answerInput_Player1.onValueChanged.AddListener((text) => OnInputValueChanged(text, true));
+            Debug.Log("✅ Validación configurada para Player1 InputField");
         }
 
-        var state = playerStates[playerId];
-        return state.isInChallenge && state.isInputEnabled && state.currentChallenge != null;
+        if (answerInput_Player2 != null)
+        {
+            answerInput_Player2.contentType = TMP_InputField.ContentType.IntegerNumber;
+            answerInput_Player2.onValidateInput = ValidateNumericInput;
+            answerInput_Player2.characterLimit = maxDigits;
+            answerInput_Player2.onValueChanged.AddListener((text) => OnInputValueChanged(text, false));
+            Debug.Log("✅ Validación configurada para Player2 InputField");
+        }
+    }
+
+    private char ValidateNumericInput(string text, int charIndex, char addedChar)
+    {
+        if (!onlyNumbers)
+        {
+            return addedChar;
+        }
+
+        if (char.IsDigit(addedChar))
+        {
+            if (text.Length < maxDigits)
+            {
+                return addedChar;
+            }
+            else
+            {
+                ShowTemporaryFeedback("¡Máximo " + maxDigits + " dígitos!");
+                return '\0';
+            }
+        }
+        else
+        {
+            if (!char.IsControl(addedChar))
+            {
+                ShowTemporaryFeedback("¡Solo se permiten números!");
+            }
+            return '\0';
+        }
+    }
+
+    private void OnInputValueChanged(string newText, bool isPlayer1)
+    {
+        if (!onlyNumbers) return;
+
+        string cleanedText = CleanNumericString(newText);
+
+        if (cleanedText != newText)
+        {
+            if (isPlayer1 && answerInput_Player1 != null)
+            {
+                answerInput_Player1.text = cleanedText;
+            }
+            else if (!isPlayer1 && answerInput_Player2 != null)
+            {
+                answerInput_Player2.text = cleanedText;
+            }
+        }
+
+        if (newText.Length > maxDigits)
+        {
+            string truncatedText = newText.Substring(0, maxDigits);
+            if (isPlayer1 && answerInput_Player1 != null)
+            {
+                answerInput_Player1.text = truncatedText;
+            }
+            else if (!isPlayer1 && answerInput_Player2 != null)
+            {
+                answerInput_Player2.text = truncatedText;
+            }
+
+            ShowTemporaryFeedback("¡Máximo " + maxDigits + " dígitos!");
+        }
+    }
+
+    private string CleanNumericString(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+
+        System.Text.StringBuilder cleaned = new System.Text.StringBuilder();
+        foreach (char c in input)
+        {
+            if (char.IsDigit(c))
+            {
+                cleaned.Append(c);
+            }
+        }
+        return cleaned.ToString();
+    }
+
+    private void ShowTemporaryFeedback(string message)
+    {
+        Debug.Log($"⚠️ {message}");
+        StartCoroutine(ClearTemporaryFeedback());
+    }
+
+    private IEnumerator ClearTemporaryFeedback()
+    {
+        yield return new WaitForSeconds(1.5f);
     }
 
     private void SetupInputFieldListeners()
@@ -207,217 +370,41 @@ public class SequenceChallengeManager : MonoBehaviour
         if (answerInput_Player1 != null)
         {
             answerInput_Player1.onSelect.AddListener((text) => OnInputFieldSelected(answerInput_Player1, true));
+            answerInput_Player1.onDeselect.AddListener((text) => OnInputFieldDeselected(answerInput_Player1, true));
         }
 
         if (answerInput_Player2 != null)
         {
             answerInput_Player2.onSelect.AddListener((text) => OnInputFieldSelected(answerInput_Player2, false));
+            answerInput_Player2.onDeselect.AddListener((text) => OnInputFieldDeselected(answerInput_Player2, false));
         }
     }
 
     private void OnInputFieldSelected(TMP_InputField inputField, bool isPlayer1)
     {
-        currentActiveInputField = inputField;
-        isAnyPanelActive = true;
-
         string playerId = isPlayer1 ? "Player1" : "Player2";
 
         if (playerStates.ContainsKey(playerId))
         {
             playerStates[playerId].isInputEnabled = true;
         }
+
+        if (!activeInputFields.Contains(inputField))
+        {
+            activeInputFields.Add(inputField);
+        }
+
+        Debug.Log($"🎯 InputField seleccionado: {playerId}");
     }
 
-    IEnumerator FindPlayersWithDelay()
+    private void OnInputFieldDeselected(TMP_InputField inputField, bool isPlayer1)
     {
-        yield return new WaitForSeconds(1f);
-        FindPlayerControllers();
-        playersInitialized = true;
-    }
-
-    public void FindPlayerControllers()
-    {
-        // Buscar Player1 por nombre y tag
-        GameObject player1Obj = GameObject.Find("Player1");
-        if (player1Obj == null)
+        if (activeInputFields.Contains(inputField))
         {
-            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-            foreach (GameObject player in players)
-            {
-                if (player.name == "Player1" || !player.name.Contains("Player2"))
-                {
-                    player1Obj = player;
-                    break;
-                }
-            }
+            activeInputFields.Remove(inputField);
         }
 
-        // Buscar Player2 por nombre y tag
-        GameObject player2Obj = GameObject.Find("Player2");
-        if (player2Obj == null)
-        {
-            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-            foreach (GameObject player in players)
-            {
-                if (player.name == "Player2" || player.name.Contains("Player2"))
-                {
-                    player2Obj = player;
-                    break;
-                }
-            }
-        }
-
-        if (player1Obj != null)
-        {
-            player1Controller = player1Obj.GetComponent<PlayerController>();
-            if (playerStates.ContainsKey("Player1"))
-            {
-                playerStates["Player1"].player = player1Obj;
-            }
-            Debug.Log($"✅ Player1 identificado: {player1Obj.name} | Tag: {player1Obj.tag}");
-        }
-
-        if (player2Obj != null)
-        {
-            player2Controller = player2Obj.GetComponent<BotController>();
-            if (player2Controller == null)
-            {
-                // Si no tiene BotController, buscar PlayerController
-                PlayerController pc = player2Obj.GetComponent<PlayerController>();
-                if (pc != null && playerStates.ContainsKey("Player2"))
-                {
-                    playerStates["Player2"].player = player2Obj;
-                    Debug.Log($"✅ Player2 identificado como Player: {player2Obj.name} | Tag: {player2Obj.tag}");
-                }
-            }
-            else if (playerStates.ContainsKey("Player2"))
-            {
-                playerStates["Player2"].player = player2Obj;
-                Debug.Log($"✅ Player2 identificado como Bot: {player2Obj.name} | Tag: {player2Obj.tag}");
-            }
-        }
-    }
-
-    void VerifyUIReferences()
-    {
-        Debug.Log("🔍 Verificando referencias UI...");
-
-        if (challengePanel_Player1 == null) Debug.LogError("❌ challengePanel_Player1 no asignado");
-        if (challengePanel_Player2 == null) Debug.LogError("❌ challengePanel_Player2 no asignado");
-    }
-
-    void SetAllPanelsInactive()
-    {
-        if (challengePanel_Player1 != null)
-        {
-            challengePanel_Player1.SetActive(false);
-            ConfigurePanelForCamera(challengePanel_Player1, true);
-        }
-        if (challengePanel_Player2 != null)
-        {
-            challengePanel_Player2.SetActive(false);
-            ConfigurePanelForCamera(challengePanel_Player2, false);
-        }
-
-        isAnyPanelActive = false;
-        currentActiveInputField = null;
-        Debug.Log("📱 Todos los paneles desactivados y configurados para sus cámaras respectivas");
-    }
-
-    void ConfigurePanelForCamera(GameObject panel, bool isPlayer1Panel)
-    {
-        if (panel == null) return;
-
-        Canvas canvas = panel.GetComponent<Canvas>();
-        if (canvas == null)
-        {
-            canvas = panel.AddComponent<Canvas>();
-            panel.AddComponent<GraphicRaycaster>();
-        }
-
-        // ✅ SOLUCIÓN: Usar Screen Space - Overlay con configuración manual de viewport
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.overrideSorting = true;
-        canvas.sortingOrder = isPlayer1Panel ? 10000 : 9999;
-
-        // Configurar CanvasScaler
-        CanvasScaler scaler = panel.GetComponent<CanvasScaler>();
-        if (scaler == null)
-        {
-            scaler = panel.AddComponent<CanvasScaler>();
-        }
-
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
-
-        // ✅ CONFIGURACIÓN MANUAL DE VIEWPORT PARA CADA PANEL
-        RectTransform rectTransform = panel.GetComponent<RectTransform>();
-        if (rectTransform != null)
-        {
-            if (isPlayer1Panel)
-            {
-                // Panel Player1: Mitad SUPERIOR de la pantalla
-                rectTransform.anchorMin = new Vector2(0f, 0.5f);
-                rectTransform.anchorMax = new Vector2(1f, 1f);
-                rectTransform.offsetMin = Vector2.zero;
-                rectTransform.offsetMax = Vector2.zero;
-                Debug.Log($"✅ Panel {panel.name} configurado para MITAD SUPERIOR (Player1)");
-            }
-            else
-            {
-                // Panel Player2: Mitad INFERIOR de la pantalla
-                rectTransform.anchorMin = new Vector2(0f, 0f);
-                rectTransform.anchorMax = new Vector2(1f, 0.5f);
-                rectTransform.offsetMin = Vector2.zero;
-                rectTransform.offsetMax = Vector2.zero;
-                Debug.Log($"✅ Panel {panel.name} configurado para MITAD INFERIOR (Player2)");
-            }
-
-            rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            rectTransform.anchoredPosition = Vector2.zero;
-        }
-    }
-
-    void ShuffleChallenges()
-    {
-        if (challengeQueue == null)
-            challengeQueue = new Queue<SequenceChallenge>();
-
-        challengeQueue.Clear();
-
-        if (challenges == null || challenges.Count == 0)
-        {
-            CreateEmergencyChallenges();
-        }
-
-        List<SequenceChallenge> shuffled = new List<SequenceChallenge>(challenges);
-
-        for (int i = shuffled.Count - 1; i > 0; i--)
-        {
-            int randomIndex = Random.Range(0, i + 1);
-            SequenceChallenge temp = shuffled[i];
-            shuffled[i] = shuffled[randomIndex];
-            shuffled[randomIndex] = temp;
-        }
-
-        foreach (SequenceChallenge challenge in shuffled)
-        {
-            challengeQueue.Enqueue(challenge);
-        }
-
-        Debug.Log($"✅ {challengeQueue.Count} desafíos mezclados y listos");
-    }
-
-    void CreateEmergencyChallenges()
-    {
-        challenges = new List<SequenceChallenge>
-        {
-            new SequenceChallenge { sequence = "2, 4, 6, 8, ?", correctAnswer = "10", hint = "Suma 2 cada vez" },
-            new SequenceChallenge { sequence = "1, 1, 2, 3, 5, ?", correctAnswer = "8", hint = "Fibonacci - suma los dos anteriores" },
-            new SequenceChallenge { sequence = "A, C, E, G, ?", correctAnswer = "I", hint = "Letras saltando una" }
-        };
+        Debug.Log($"🎯 InputField deseleccionado: {(isPlayer1 ? "Player1" : "Player2")}");
     }
 
     public void ShowChallenge(Checkpoint checkpoint, GameObject player)
@@ -433,10 +420,8 @@ public class SequenceChallengeManager : MonoBehaviour
 
         Debug.Log($"🎯 ShowChallenge llamado - Player: {playerName} | Tag: {playerTag} | Checkpoint: {checkpoint?.name}");
 
-        // ✅ DETECCIÓN MEJORADA DE JUGADORES
         bool isPlayer1 = DeterminePlayerCorrectly(player);
 
-        // OBTENER EL DESAFÍO ACTUAL
         SequenceChallenge currentChallenge = GetCurrentChallengeForPlayer(player);
         if (currentChallenge == null)
         {
@@ -444,7 +429,9 @@ public class SequenceChallengeManager : MonoBehaviour
             return;
         }
 
-        // ASIGNAR ESTADO AL JUGADOR
+        // ✅ SOLO DESACTIVAR CONTROLES DEL JUGADOR QUE ACTIVÓ EL CHECKPOINT
+        DisablePlayerControls(player);
+
         string playerId = isPlayer1 ? "Player1" : "Player2";
         if (playerStates.ContainsKey(playerId))
         {
@@ -452,10 +439,10 @@ public class SequenceChallengeManager : MonoBehaviour
             playerStates[playerId].currentCheckpoint = checkpoint;
             playerStates[playerId].isInChallenge = true;
             playerStates[playerId].isInputEnabled = true;
+            playerStates[playerId].isPanelActive = true;
             playerStates[playerId].player = player;
         }
 
-        // MOSTRAR PANEL CORRECTO
         if (isPlayer1)
         {
             Debug.Log($"🎯 Mostrando desafío para PLAYER1");
@@ -466,83 +453,58 @@ public class SequenceChallengeManager : MonoBehaviour
             Debug.Log($"🎯 Mostrando desafío para PLAYER2");
             ShowPlayer2Challenge(currentChallenge, player);
         }
+
+        CheckMultipleActivePanels();
     }
 
-    private bool DeterminePlayerCorrectly(GameObject player)
+    private void CheckMultipleActivePanels()
     {
-        string playerName = player.name;
+        bool player1Active = playerStates.ContainsKey("Player1") && playerStates["Player1"].isPanelActive;
+        bool player2Active = playerStates.ContainsKey("Player2") && playerStates["Player2"].isPanelActive;
 
-        // ✅ DETECCIÓN POR NOMBRE EXACTO PRIMERO
-        if (playerName == "Player1")
+        if (player1Active && player2Active)
         {
-            Debug.Log($"✅ Identificado como Player1 por nombre exacto");
-            return true;
-        }
-        if (playerName == "Player2")
-        {
-            Debug.Log($"✅ Identificado como Player2 por nombre exacto");
-            return false;
-        }
+            Debug.Log("🎯 AMBOS PANELES ACTIVOS - Input simultáneo habilitado");
 
-        // ✅ DETECCIÓN POR CONTENIDO DEL NOMBRE
-        if (playerName.Contains("Player1") && !playerName.Contains("Player2"))
-        {
-            Debug.Log($"✅ Identificado como Player1 por contenido del nombre");
-            return true;
-        }
-        if (playerName.Contains("Player2"))
-        {
-            Debug.Log($"✅ Identificado como Player2 por contenido del nombre");
-            return false;
-        }
-
-        // ✅ DETECCIÓN POR ORDEN DE CREACIÓN (fallback)
-        PlayerController[] allPlayers = FindObjectsOfType<PlayerController>();
-        if (allPlayers.Length >= 2)
-        {
-            // El primer jugador encontrado es Player1, el segundo es Player2
-            for (int i = 0; i < allPlayers.Length; i++)
+            if (answerInput_Player1 != null)
             {
-                if (allPlayers[i].gameObject == player)
-                {
-                    bool isPlayer1 = (i == 0);
-                    Debug.Log($"✅ Identificado como {(isPlayer1 ? "Player1" : "Player2")} por orden (índice {i})");
-                    return isPlayer1;
-                }
+                answerInput_Player1.interactable = true;
+            }
+            if (answerInput_Player2 != null)
+            {
+                answerInput_Player2.interactable = true;
+            }
+
+            if (autoFocusInputField)
+            {
+                StartCoroutine(FocusBothInputFields());
             }
         }
-
-        // ✅ ÚLTIMO FALLBACK: Por posición (Player1 a la izquierda, Player2 a la derecha)
-        bool isPlayer1ByPosition = player.transform.position.x < 8.0f; // Umbral aproximado
-        Debug.Log($"⚠️ Identificado como {(isPlayer1ByPosition ? "Player1" : "Player2")} por posición de fallback");
-        return isPlayer1ByPosition;
     }
 
-    private SequenceChallenge GetCurrentChallengeForPlayer(GameObject player)
+    private IEnumerator FocusBothInputFields()
     {
-        if (challengeQueue == null || challengeQueue.Count == 0)
-        {
-            ShuffleChallenges();
-        }
+        yield return new WaitForEndOfFrame();
 
-        if (challengeQueue.Count > 0)
+        if (answerInput_Player1 != null && answerInput_Player1.gameObject.activeInHierarchy)
         {
-            return challengeQueue.Dequeue();
-        }
+            answerInput_Player1.Select();
+            answerInput_Player1.ActivateInputField();
 
-        Debug.LogError("❌ No hay desafíos disponibles");
-        return null;
+            if (!activeInputFields.Contains(answerInput_Player1))
+            {
+                activeInputFields.Add(answerInput_Player1);
+            }
+        }
     }
 
     private void ShowPlayer1Challenge(SequenceChallenge challenge)
     {
         if (challengePanel_Player1 != null)
         {
-            // ✅ FORZAR RECONFIGURACIÓN ANTES DE ACTIVAR
             ConfigurePanelForCamera(challengePanel_Player1, true);
 
             challengePanel_Player1.SetActive(true);
-            isAnyPanelActive = true;
 
             if (sequenceText_Player1 != null)
                 sequenceText_Player1.text = challenge.sequence;
@@ -558,7 +520,9 @@ public class SequenceChallengeManager : MonoBehaviour
                 answerInput_Player1.interactable = true;
             }
 
-            if (autoFocusInputField && answerInput_Player1 != null)
+            bool otherPanelActive = playerStates.ContainsKey("Player2") && playerStates["Player2"].isPanelActive;
+
+            if (autoFocusInputField && answerInput_Player1 != null && !otherPanelActive)
             {
                 StartCoroutine(SelectInputFieldAfterFrame(answerInput_Player1, true));
             }
@@ -571,11 +535,9 @@ public class SequenceChallengeManager : MonoBehaviour
     {
         if (challengePanel_Player2 != null)
         {
-            // ✅ FORZAR RECONFIGURACIÓN ANTES DE ACTIVAR
             ConfigurePanelForCamera(challengePanel_Player2, false);
 
             challengePanel_Player2.SetActive(true);
-            isAnyPanelActive = true;
 
             if (sequenceText_Player2 != null)
                 sequenceText_Player2.text = challenge.sequence;
@@ -586,7 +548,11 @@ public class SequenceChallengeManager : MonoBehaviour
             if (feedbackText_Player2 != null)
                 feedbackText_Player2.text = "";
 
-            // Verificar si es bot para respuesta automática
+            if (answerInput_Player2 != null)
+            {
+                answerInput_Player2.interactable = true;
+            }
+
             BotController botController = player.GetComponent<BotController>();
             if (botController != null && !botController.isPlayerControlled)
             {
@@ -594,7 +560,12 @@ public class SequenceChallengeManager : MonoBehaviour
             }
             else if (autoFocusInputField && answerInput_Player2 != null)
             {
-                StartCoroutine(SelectInputFieldAfterFrame(answerInput_Player2, false));
+                bool otherPanelActive = playerStates.ContainsKey("Player1") && playerStates["Player1"].isPanelActive;
+
+                if (!otherPanelActive)
+                {
+                    StartCoroutine(SelectInputFieldAfterFrame(answerInput_Player2, false));
+                }
             }
 
             Debug.Log("📱 Panel Player2 ACTIVADO en MITAD INFERIOR");
@@ -609,8 +580,26 @@ public class SequenceChallengeManager : MonoBehaviour
         {
             inputField.Select();
             inputField.ActivateInputField();
-            currentActiveInputField = inputField;
+
+            if (!activeInputFields.Contains(inputField))
+            {
+                activeInputFields.Add(inputField);
+            }
         }
+    }
+
+    private bool CanProcessInput(bool isPlayer1)
+    {
+        string playerId = isPlayer1 ? "Player1" : "Player2";
+
+        if (!playerStates.ContainsKey(playerId))
+        {
+            Debug.LogError($"❌ {playerId} no tiene estado registrado");
+            return false;
+        }
+
+        var state = playerStates[playerId];
+        return state.isInChallenge && state.isInputEnabled && state.currentChallenge != null && state.isPanelActive;
     }
 
     public void CheckAnswer(bool isPlayer1)
@@ -625,6 +614,12 @@ public class SequenceChallengeManager : MonoBehaviour
         if (string.IsNullOrEmpty(userAnswer))
         {
             ShowFeedback(isPlayer1, false, "Respuesta vacía");
+            return;
+        }
+
+        if (onlyNumbers && !IsValidNumericAnswer(userAnswer))
+        {
+            ShowFeedback(isPlayer1, false, "¡Solo se permiten números!");
             return;
         }
 
@@ -643,13 +638,35 @@ public class SequenceChallengeManager : MonoBehaviour
         }
     }
 
+    private bool IsValidNumericAnswer(string answer)
+    {
+        if (string.IsNullOrEmpty(answer)) return false;
+
+        foreach (char c in answer)
+        {
+            if (!char.IsDigit(c))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private string GetUserAnswer(bool isPlayer1)
     {
+        string answer = "";
+
         if (isPlayer1 && answerInput_Player1 != null)
-            return answerInput_Player1.text.Trim();
+            answer = answerInput_Player1.text.Trim();
         else if (!isPlayer1 && answerInput_Player2 != null)
-            return answerInput_Player2.text.Trim();
-        return "";
+            answer = answerInput_Player2.text.Trim();
+
+        if (onlyNumbers)
+        {
+            answer = CleanNumericString(answer);
+        }
+
+        return answer;
     }
 
     private void ShowFeedback(bool isPlayer1, bool isCorrect, string message)
@@ -688,17 +705,21 @@ public class SequenceChallengeManager : MonoBehaviour
 
         bool isPlayer1 = playerId == "Player1";
 
-        if (isPlayer1 && challengePanel_Player1 != null)
+        if (isPlayer1 && challengePanel_Player1 != null && playerStates[playerId].isPanelActive)
         {
             challengePanel_Player1.SetActive(false);
         }
-        else if (!isPlayer1 && challengePanel_Player2 != null)
+        else if (!isPlayer1 && challengePanel_Player2 != null && playerStates[playerId].isPanelActive)
         {
             challengePanel_Player2.SetActive(false);
         }
 
-        isAnyPanelActive = false;
-        currentActiveInputField = null;
+        TMP_InputField inputFieldToRemove = isPlayer1 ? answerInput_Player1 : answerInput_Player2;
+        if (inputFieldToRemove != null && activeInputFields.Contains(inputFieldToRemove))
+        {
+            activeInputFields.Remove(inputFieldToRemove);
+        }
+
         CompleteChallengeForPlayer(playerId);
     }
 
@@ -713,43 +734,132 @@ public class SequenceChallengeManager : MonoBehaviour
             playerState.currentCheckpoint.CompleteChallenge(playerState.player);
         }
 
+        // ✅ SOLO REACTIVAR CONTROLES DEL JUGADOR QUE COMPLETÓ EL DESAFÍO
+        if (playerState.player != null)
+        {
+            EnablePlayerControls(playerState.player);
+        }
+
         playerState.isInChallenge = false;
         playerState.currentChallenge = null;
         playerState.currentCheckpoint = null;
         playerState.isInputEnabled = false;
+        playerState.isPanelActive = false;
 
-        ReactivatePlayerControls(playerId);
+        Debug.Log($"✅ Desafío completado para: {playerId}");
     }
 
-    private void ReactivatePlayerControls(string playerId)
+    // ✅ MÉTODO: Desactivar controles solo del jugador específico
+    private void DisablePlayerControls(GameObject player)
     {
-        if (!playerStates.ContainsKey(playerId)) return;
-
-        var player = playerStates[playerId].player;
         if (player == null) return;
 
-        bool isPlayer1 = playerId == "Player1";
-
-        if (isPlayer1 && player1Controller != null)
+        // Desactivar PlayerController
+        PlayerController playerController = player.GetComponent<PlayerController>();
+        if (playerController != null)
         {
-            player1Controller.SetControlsEnabled(true);
+            playerController.SetControlsEnabled(false);
+            Debug.Log($"🎮 Controles DESACTIVADOS para: {player.name}");
         }
-        else if (!isPlayer1)
+
+        // Desactivar BotController si es Player2 controlado por jugador
+        BotController botController = player.GetComponent<BotController>();
+        if (botController != null && botController.isPlayerControlled)
         {
-            BotController botController = player.GetComponent<BotController>();
-            if (botController != null)
+            botController.SetControlsEnabled(false);
+            Debug.Log($"🎮 Controles DESACTIVADOS para Bot (Player2): {player.name}");
+        }
+
+        // Detener movimiento físico
+        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            Debug.Log($"🛑 Movimiento detenido para: {player.name}");
+        }
+    }
+
+    // ✅ MÉTODO: Reactivar controles solo del jugador específico
+    private void EnablePlayerControls(GameObject player)
+    {
+        if (player == null) return;
+
+        // Reactivar PlayerController
+        PlayerController playerController = player.GetComponent<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.SetControlsEnabled(true);
+            Debug.Log($"🎮 Controles REACTIVADOS para: {player.name}");
+        }
+
+        // Reactivar BotController si es Player2 controlado por jugador
+        BotController botController = player.GetComponent<BotController>();
+        if (botController != null && botController.isPlayerControlled)
+        {
+            botController.SetControlsEnabled(true);
+            Debug.Log($"🎮 Controles REACTIVADOS para Bot (Player2): {player.name}");
+        }
+    }
+
+    private bool DeterminePlayerCorrectly(GameObject player)
+    {
+        string playerName = player.name;
+
+        if (playerName == "Player1")
+        {
+            Debug.Log($"✅ Identificado como Player1 por nombre exacto");
+            return true;
+        }
+        if (playerName == "Player2")
+        {
+            Debug.Log($"✅ Identificado como Player2 por nombre exacto");
+            return false;
+        }
+
+        if (playerName.Contains("Player1") && !playerName.Contains("Player2"))
+        {
+            Debug.Log($"✅ Identificado como Player1 por contenido del nombre");
+            return true;
+        }
+        if (playerName.Contains("Player2"))
+        {
+            Debug.Log($"✅ Identificado como Player2 por contenido del nombre");
+            return false;
+        }
+
+        PlayerController[] allPlayers = FindObjectsOfType<PlayerController>();
+        if (allPlayers.Length >= 2)
+        {
+            for (int i = 0; i < allPlayers.Length; i++)
             {
-                botController.SetControlsEnabled(true);
-            }
-            else
-            {
-                PlayerController pc = player.GetComponent<PlayerController>();
-                if (pc != null)
+                if (allPlayers[i].gameObject == player)
                 {
-                    pc.SetControlsEnabled(true);
+                    bool isPlayer1 = (i == 0);
+                    Debug.Log($"✅ Identificado como {(isPlayer1 ? "Player1" : "Player2")} por orden (índice {i})");
+                    return isPlayer1;
                 }
             }
         }
+
+        bool isPlayer1ByPosition = player.transform.position.x < 8.0f;
+        Debug.Log($"⚠️ Identificado como {(isPlayer1ByPosition ? "Player1" : "Player2")} por posición de fallback");
+        return isPlayer1ByPosition;
+    }
+
+    private SequenceChallenge GetCurrentChallengeForPlayer(GameObject player)
+    {
+        if (challengeQueue == null || challengeQueue.Count == 0)
+        {
+            ShuffleChallenges();
+        }
+
+        if (challengeQueue.Count > 0)
+        {
+            return challengeQueue.Dequeue();
+        }
+
+        Debug.LogError("❌ No hay desafíos disponibles");
+        return null;
     }
 
     private IEnumerator AutoAnswerForBot(string playerId)
@@ -841,13 +951,197 @@ public class SequenceChallengeManager : MonoBehaviour
         return "";
     }
 
+    void VerifyUIReferences()
+    {
+        Debug.Log("🔍 Verificando referencias UI...");
+
+        if (challengePanel_Player1 == null) Debug.LogError("❌ challengePanel_Player1 no asignado");
+        if (challengePanel_Player2 == null) Debug.LogError("❌ challengePanel_Player2 no asignado");
+    }
+
+    void SetAllPanelsInactive()
+    {
+        if (challengePanel_Player1 != null)
+        {
+            challengePanel_Player1.SetActive(false);
+            ConfigurePanelForCamera(challengePanel_Player1, true);
+        }
+        if (challengePanel_Player2 != null)
+        {
+            challengePanel_Player2.SetActive(false);
+            ConfigurePanelForCamera(challengePanel_Player2, false);
+        }
+
+        activeInputFields.Clear();
+        Debug.Log("📱 Todos los paneles desactivados y configurados para sus cámaras respectivas");
+    }
+
+    void ConfigurePanelForCamera(GameObject panel, bool isPlayer1Panel)
+    {
+        if (panel == null) return;
+
+        Canvas canvas = panel.GetComponent<Canvas>();
+        if (canvas == null)
+        {
+            canvas = panel.AddComponent<Canvas>();
+            panel.AddComponent<GraphicRaycaster>();
+        }
+
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = isPlayer1Panel ? 10000 : 9999;
+
+        CanvasScaler scaler = panel.GetComponent<CanvasScaler>();
+        if (scaler == null)
+        {
+            scaler = panel.AddComponent<CanvasScaler>();
+        }
+
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
+
+        RectTransform rectTransform = panel.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            if (isPlayer1Panel)
+            {
+                rectTransform.anchorMin = new Vector2(0f, 0.5f);
+                rectTransform.anchorMax = new Vector2(1f, 1f);
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+                Debug.Log($"✅ Panel {panel.name} configurado para MITAD SUPERIOR (Player1)");
+            }
+            else
+            {
+                rectTransform.anchorMin = new Vector2(0f, 0f);
+                rectTransform.anchorMax = new Vector2(1f, 0.5f);
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+                Debug.Log($"✅ Panel {panel.name} configurado para MITAD INFERIOR (Player2)");
+            }
+
+            rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            rectTransform.anchoredPosition = Vector2.zero;
+        }
+    }
+
+    void ShuffleChallenges()
+    {
+        if (challengeQueue == null)
+            challengeQueue = new Queue<SequenceChallenge>();
+
+        challengeQueue.Clear();
+
+        if (challenges == null || challenges.Count == 0)
+        {
+            CreateEmergencyChallenges();
+        }
+
+        List<SequenceChallenge> shuffled = new List<SequenceChallenge>(challenges);
+
+        for (int i = shuffled.Count - 1; i > 0; i--)
+        {
+            int randomIndex = Random.Range(0, i + 1);
+            SequenceChallenge temp = shuffled[i];
+            shuffled[i] = shuffled[randomIndex];
+            shuffled[randomIndex] = temp;
+        }
+
+        foreach (SequenceChallenge challenge in shuffled)
+        {
+            challengeQueue.Enqueue(challenge);
+        }
+
+        Debug.Log($"✅ {challengeQueue.Count} desafíos mezclados y listos");
+    }
+
+    void CreateEmergencyChallenges()
+    {
+        challenges = new List<SequenceChallenge>
+        {
+            new SequenceChallenge { sequence = "2, 4, 6, 8, ?", correctAnswer = "10", hint = "Suma 2 cada vez" },
+            new SequenceChallenge { sequence = "1, 1, 2, 3, 5, ?", correctAnswer = "8", hint = "Fibonacci - suma los dos anteriores" },
+            new SequenceChallenge { sequence = "3, 6, 9, 12, ?", correctAnswer = "15", hint = "Multiplica por 3" }
+        };
+    }
+
+    IEnumerator FindPlayersWithDelay()
+    {
+        yield return new WaitForSeconds(1f);
+        FindPlayerControllers();
+        playersInitialized = true;
+
+        SetupCameraFollowScripts();
+    }
+
+    public void FindPlayerControllers()
+    {
+        GameObject player1Obj = GameObject.Find("Player1");
+        if (player1Obj == null)
+        {
+            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+            foreach (GameObject player in players)
+            {
+                if (player.name == "Player1" || !player.name.Contains("Player2"))
+                {
+                    player1Obj = player;
+                    break;
+                }
+            }
+        }
+
+        GameObject player2Obj = GameObject.Find("Player2");
+        if (player2Obj == null)
+        {
+            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+            foreach (GameObject player in players)
+            {
+                if (player.name == "Player2" || player.name.Contains("Player2"))
+                {
+                    player2Obj = player;
+                    break;
+                }
+            }
+        }
+
+        if (player1Obj != null)
+        {
+            player1Controller = player1Obj.GetComponent<PlayerController>();
+            if (playerStates.ContainsKey("Player1"))
+            {
+                playerStates["Player1"].player = player1Obj;
+            }
+            Debug.Log($"✅ Player1 identificado: {player1Obj.name} | Tag: {player1Obj.tag}");
+        }
+
+        if (player2Obj != null)
+        {
+            player2Controller = player2Obj.GetComponent<BotController>();
+            if (player2Controller == null)
+            {
+                PlayerController pc = player2Obj.GetComponent<PlayerController>();
+                if (pc != null && playerStates.ContainsKey("Player2"))
+                {
+                    playerStates["Player2"].player = player2Obj;
+                    Debug.Log($"✅ Player2 identificado como Player: {player2Obj.name} | Tag: {player2Obj.tag}");
+                }
+            }
+            else if (playerStates.ContainsKey("Player2"))
+            {
+                playerStates["Player2"].player = player2Obj;
+                Debug.Log($"✅ Player2 identificado como Bot: {player2Obj.name} | Tag: {player2Obj.tag}");
+            }
+        }
+    }
+
     [ContextMenu("🔧 FORZAR DETECCIÓN DE JUGADORES")]
     public void ForzarDeteccionJugadores()
     {
         Debug.Log("🔄 Forzando detección de jugadores...");
         FindPlayerControllers();
 
-        // Verificar estado actual
         Debug.Log("🔍 ESTADO ACTUAL DE JUGADORES:");
         foreach (var kvp in playerStates)
         {
@@ -855,12 +1149,18 @@ public class SequenceChallengeManager : MonoBehaviour
         }
     }
 
+    [ContextMenu("🎯 CONFIGURAR SEGUIMIENTO DE CÁMARAS")]
+    public void ConfigurarSeguimientoCamaras()
+    {
+        Debug.Log("🎯 Configurando seguimiento de cámaras...");
+        SetupCameraFollowScripts();
+    }
+
     [ContextMenu("🎯 SOLUCIÓN DEFINITIVA PANELES")]
     public void SolucionDefinitivaPaneles()
     {
         Debug.Log("🎯 APLICANDO SOLUCIÓN DEFINITIVA PARA PANELES...");
 
-        // Reconfigurar ambos paneles
         if (challengePanel_Player1 != null)
         {
             ConfigurePanelForCamera(challengePanel_Player1, true);
@@ -874,5 +1174,35 @@ public class SequenceChallengeManager : MonoBehaviour
         }
 
         Debug.Log("🎯 SOLUCIÓN DEFINITIVA APLICADA");
+    }
+
+    [ContextMenu("🔍 DIAGNÓSTICO COMPLETO DEL SISTEMA")]
+    public void DiagnosticoCompletoSistema()
+    {
+        Debug.Log("=== DIAGNÓSTICO COMPLETO DEL SISTEMA ===");
+
+        Debug.Log($"📷 Player1Camera: {player1Camera?.name} | Activa: {player1Camera?.isActiveAndEnabled}");
+        Debug.Log($"📷 Player2Camera: {player2Camera?.name} | Activa: {player2Camera?.isActiveAndEnabled}");
+
+        if (player1Camera != null)
+        {
+            SeguirJugador follow1 = player1Camera.GetComponent<SeguirJugador>();
+            Debug.Log($"🎯 SeguirJugador en Player1Camera: {(follow1 != null ? "PRESENTE" : "AUSENTE")}");
+        }
+
+        if (player2Camera != null)
+        {
+            SeguirJugador follow2 = player2Camera.GetComponent<SeguirJugador>();
+            Debug.Log($"🎯 SeguirJugador en Player2Camera: {(follow2 != null ? "PRESENTE" : "AUSENTE")}");
+        }
+
+        Debug.Log("🔍 JUGADORES EN ESCENA:");
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        foreach (GameObject player in players)
+        {
+            Debug.Log($"   👤 {player.name} | Posición: {player.transform.position}");
+        }
+
+        Debug.Log("=== FIN DIAGNÓSTICO ===");
     }
 }

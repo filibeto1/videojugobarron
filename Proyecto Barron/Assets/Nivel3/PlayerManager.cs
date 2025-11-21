@@ -126,32 +126,38 @@ public class PlayerManager : MonoBehaviour
         // Si no hay jugadores, crear según el modo
         if (players.Count == 0)
         {
-            // ✅ CORREGIDO: Usar GameModeSelector en lugar de GameSettings
             GameModeSelector gameModeSelector = FindObjectOfType<GameModeSelector>();
             bool isTwoPlayerMode = false;
+            bool isVsBotMode = false; // ✅ NUEVO
 
             if (gameModeSelector != null)
             {
                 isTwoPlayerMode = gameModeSelector.IsTwoPlayerMode();
+                isVsBotMode = gameModeSelector.IsVsBotMode(); // ✅ NUEVO
             }
             else
             {
-                // Fallback: buscar en la escena o usar valor por defecto
                 Debug.LogWarning("⚠️ GameModeSelector no encontrado, usando modo 1 jugador por defecto");
                 isTwoPlayerMode = false;
+                isVsBotMode = false;
             }
 
-            if (!isTwoPlayerMode)
+            if (isVsBotMode) // ✅ NUEVO: Modo VS Bot
             {
-                Debug.Log("🎯 Modo: Un jugador - Creando jugador y bot");
+                Debug.Log("🎯 Modo: VS Bot - Creando jugador y bot");
                 CreatePlayer();
                 CreateBot();
             }
-            else
+            else if (isTwoPlayerMode)
             {
                 Debug.Log("🎯 Modo: Dos jugadores - Creando dos jugadores");
                 CreatePlayer();
                 CreateSecondPlayer();
+            }
+            else
+            {
+                Debug.Log("🎯 Modo: Un jugador - Creando solo jugador");
+                CreatePlayer();
             }
         }
         else

@@ -30,6 +30,7 @@ public class CountdownManager : MonoBehaviour
     private bool isEnabled = false;
     private bool waitingForModeSelection = true;
     private bool hasBeenActivated = false;
+    private GameModeSelector gameModeSelector;
 
     void Start()
     {
@@ -86,6 +87,13 @@ public class CountdownManager : MonoBehaviour
         isEnabled = true;
         waitingForModeSelection = false;
 
+        // ✅ BUSCAR GameModeSelector
+        gameModeSelector = FindObjectOfType<GameModeSelector>();
+        if (gameModeSelector != null)
+        {
+            Debug.Log("✅ GameModeSelector encontrado y referenciado");
+        }
+
         ForceDisableAllPanels();
 
         Debug.Log("🔄 CountdownManager: Iniciando búsqueda de jugadores...");
@@ -98,6 +106,13 @@ public class CountdownManager : MonoBehaviour
         {
             Debug.LogError("❌ CountdownManager no está activo - no se puede iniciar corrutina");
         }
+    }
+
+    // ✅ NUEVO MÉTODO: Para que GameModeSelector pueda establecer referencia
+    public void SetGameModeSelector(GameModeSelector selector)
+    {
+        gameModeSelector = selector;
+        Debug.Log("✅ GameModeSelector asignado a CountdownManager");
     }
 
     IEnumerator FindPlayersDelayed()
@@ -295,6 +310,21 @@ public class CountdownManager : MonoBehaviour
     {
         countdownStarted = true;
 
+        // ✅ DESACTIVAR MOVIMIENTO DEL BOT DURANTE COUNTDOWN
+        if (gameModeSelector != null && gameModeSelector.IsVsBotMode())
+        {
+            GameObject bot = gameModeSelector.GetBot();
+            if (bot != null)
+            {
+                BotController botController = bot.GetComponent<BotController>();
+                if (botController != null)
+                {
+                    botController.SetControlsEnabled(false);
+                    Debug.Log("🤖 Movimiento del Bot DESACTIVADO durante countdown");
+                }
+            }
+        }
+
         if (countdownPanel_Player1 != null)
         {
             countdownPanel_Player1.SetActive(true);
@@ -354,6 +384,21 @@ public class CountdownManager : MonoBehaviour
 
         Debug.Log("❌ Countdown INTERRUMPIDO");
 
+        // ✅ REACTIVAR BOT SI SE INTERRUMPE
+        if (gameModeSelector != null && gameModeSelector.IsVsBotMode())
+        {
+            GameObject bot = gameModeSelector.GetBot();
+            if (bot != null)
+            {
+                BotController botController = bot.GetComponent<BotController>();
+                if (botController != null)
+                {
+                    botController.SetControlsEnabled(true);
+                    Debug.Log("🤖 Movimiento del Bot REACTIVADO después de interrupción");
+                }
+            }
+        }
+
         StartCoroutine(HidePanelsAfterDelay(2f));
     }
 
@@ -397,7 +442,15 @@ public class CountdownManager : MonoBehaviour
         gameStarted = true;
         Debug.Log("🎮 JUEGO INICIADO - CountdownManager completado");
 
+        // ✅ ACTIVAR CONTROLES DESPUÉS DEL COUNTDOWN
         EnableAllPlayerControls();
+
+        // ✅ ACTIVAR ESPECÍFICAMENTE EL BOT EN MODO VS BOT
+        if (gameModeSelector != null && gameModeSelector.IsVsBotMode())
+        {
+            gameModeSelector.EnableBotControls();
+            Debug.Log("🤖 Controles del Bot activados después del countdown");
+        }
 
         GameManager gameManager = FindObjectOfType<GameManager>();
         if (gameManager != null)
@@ -430,6 +483,7 @@ public class CountdownManager : MonoBehaviour
             }
         }
 
+        // ✅ SOLO ACTIVAR BOTS CONTROLADOS POR JUGADOR (NO IA)
         BotController[] botControllers = FindObjectsOfType<BotController>();
         foreach (BotController bot in botControllers)
         {
@@ -473,5 +527,27 @@ public class CountdownManager : MonoBehaviour
         Debug.Log("🚀 CountdownManager: Forzando inicio de juego");
         gameStarted = true;
         ForceDisableAllPanels();
+
+        // ✅ ACTIVAR CONTROLES AL FORZAR INICIO
+        EnableAllPlayerControls();
+        if (gameModeSelector != null && gameModeSelector.IsVsBotMode())
+        {
+            gameModeSelector.EnableBotControls();
+        }
+    }
+
+    // ✅ NUEVO: Método para verificar estado
+    public bool IsGameStarted()
+    {
+        return gameStarted;
+    }
+
+    // ✅ NUEVO: Método para reiniciar
+    public void ResetCountdown()
+    {
+        countdownStarted = false;
+        gameStarted = false;
+        ForceDisableAllPanels();
+        Debug.Log("🔄 CountdownManager reiniciado");
     }
 }
