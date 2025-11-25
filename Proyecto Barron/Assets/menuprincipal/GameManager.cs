@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
     public GameObject playerPrefab;
     public GameObject botPrefab;
 
-    // NUEVAS VARIABLES PARA EL SISTEMA DE CHECKPOINTS
+    // NUEVAS VARIABLES PARA EL SISTEMA DE CARRERA
     private int currentCheckpoint = 0;
     private int totalCheckpoints = 4;
     private bool gameActive = false;
@@ -29,19 +29,50 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("🔄 GameManager Awake llamado");
 
-        if (Instance == null)
+        // VERIFICACIÓN MÁS ROBUSTA DEL SINGLETON
+        if (Instance != null && Instance != this)
         {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            Debug.Log("✅ GameManager creado y persistente");
-        }
-        else
-        {
-            Destroy(gameObject);
+            Debug.Log("⚠️ GameManager duplicado detectado - destruyendo copia");
+            DestroyImmediate(gameObject);
             return;
         }
 
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
+        // Suscribir eventos UNA SOLA VEZ
         SceneManager.sceneLoaded += OnSceneLoaded;
+
+        Debug.Log("✅ GameManager creado y persistente");
+    }
+
+    void Start()
+    {
+        Debug.Log("🎮 GameManager Start - Cargando selección de personaje");
+
+        // ✅ USAR SOLO UNA CLAVE CONSISTENTE
+        jugadorSeleccionado = PlayerPrefs.GetInt("JugadorSeleccionado", 0);
+        Debug.Log($"✅ Selección cargada de PlayerPrefs: {jugadorSeleccionado}");
+
+        // VERIFICAR QUE LA SELECCIÓN ES VÁLIDA
+        if (personajes != null && jugadorSeleccionado >= 0 && jugadorSeleccionado < personajes.Count)
+        {
+            Personaje p = personajes[jugadorSeleccionado];
+            Debug.Log($"🎯 Personaje actual: {p.nombre}, Prefab: {(p.personajeJugable != null ? p.personajeJugable.name : "NULL")}");
+        }
+        else
+        {
+            Debug.LogError($"❌ Selección inválida: Index={jugadorSeleccionado}, Total personajes={(personajes != null ? personajes.Count : 0)}");
+
+            // FORZAR SELECCIÓN POR DEFECTO SI ES INVÁLIDA
+            if (personajes != null && personajes.Count > 0)
+            {
+                jugadorSeleccionado = 0;
+                PlayerPrefs.SetInt("JugadorSeleccionado", 0);
+                PlayerPrefs.Save();
+                Debug.Log($"🔄 Forzando selección por defecto: {personajes[0].nombre}");
+            }
+        }
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -49,23 +80,38 @@ public class GameManager : MonoBehaviour
         Debug.Log($"📍 Escena cargada: {scene.name}");
 
         // ✅ GameManager YA NO SPAWNA JUGADORES
-        // PlayerScenePersister se encarga de eso
         Debug.Log("✅ GameManager: Dejando que PlayerScenePersister maneje los jugadores");
 
-        // Reiniciar estado del juego al cargar nueva escena
-        if (scene.name != "MainMenu") // Asumiendo que tu menú principal tiene este nombre
+        // REINICIAR ESTADO SOLO SI ES UNA NUEVA PARTIDA
+        if (ShouldResetGameState(scene.name))
         {
             ResetGameState();
         }
+        else
+        {
+            Debug.Log("🔁 Manteniendo estado del juego para continuidad");
+        }
+    }
+
+    private bool ShouldResetGameState(string sceneName)
+    {
+        if (sceneName == "MainMenu" || sceneName == "MenuPrincipal")
+        {
+            return true;
+        }
+
+        if (currentCheckpoint > 0)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     // ========================================
-    // NUEVOS MÉTODOS PARA EL SISTEMA DE CARRERA
+    // MÉTODOS PARA EL SISTEMA DE CARRERA
     // ========================================
 
-    /// <summary>
-    /// Reinicia el estado del juego para nueva partida
-    /// </summary>
     public void ResetGameState()
     {
         currentCheckpoint = 0;
@@ -73,16 +119,20 @@ public class GameManager : MonoBehaviour
         Debug.Log("🔄 Estado del juego reiniciado");
     }
 
-    /// <summary>
-    /// Llamado por CountdownManager cuando termina la cuenta regresiva
-    /// </summary>
+    public void ResetCompleteGame()
+    {
+        currentCheckpoint = 0;
+        gameActive = false;
+        jugadorSeleccionado = 0;
+        Debug.Log("🔄 JUEGO COMPLETAMENTE REINICIADO - Nueva partida");
+    }
+
     public void StartGame()
     {
         gameActive = true;
         currentCheckpoint = 0;
         Debug.Log("🎮 ¡Juego iniciado! Los jugadores pueden moverse");
 
-        // Activar controles de los jugadores si están desactivados
         GameObject player = GetPlayer();
         if (player != null)
         {
@@ -94,7 +144,6 @@ public class GameManager : MonoBehaviour
             Debug.Log("✅ Controles del jugador activados");
         }
 
-        // Activar bot si existe
         GameObject bot = GameObject.FindGameObjectWithTag("Bot");
         if (bot != null)
         {
@@ -107,9 +156,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Llamado cuando un checkpoint se completa correctamente
-    /// </summary>
     public void CheckpointReached(int checkpointNumber)
     {
         if (!gameActive)
@@ -138,44 +184,25 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Llamado cuando todos los checkpoints están completados
-    /// </summary>
     private void GameCompleted()
     {
         gameActive = false;
         Debug.Log("🎉 ¡Juego completado! Todos los checkpoints superados");
-
-        // Mostrar pantalla de victoria
         ShowVictoryScreen();
-
-        // Desactivar controles de jugadores
         DisablePlayerControls();
     }
 
-    /// <summary>
-    /// Muestra pantalla de victoria (debes implementar tu UI)
-    /// </summary>
     private void ShowVictoryScreen()
     {
-        // Aquí implementa tu lógica de UI de victoria
         Debug.Log("🏆 ¡Mostrar pantalla de victoria!");
-
-        // Ejemplo básico - puedes expandir esto
-        // victoryPanel.SetActive(true);
-        // Time.timeScale = 0f; // Pausar el juego
     }
 
-    /// <summary>
-    /// Desactiva controles de jugadores al terminar el juego
-    /// </summary>
     private void DisablePlayerControls()
     {
         GameObject player = GetPlayer();
         if (player != null)
         {
-            // Ejemplo: desactivar movimiento
-            MonoBehaviour moveScript = player.GetComponent<MonoBehaviour>(); // Reemplaza con tu script de movimiento
+            MonoBehaviour moveScript = player.GetComponent<MonoBehaviour>();
             if (moveScript != null)
             {
                 moveScript.enabled = false;
@@ -185,7 +212,7 @@ public class GameManager : MonoBehaviour
         GameObject bot = GameObject.FindGameObjectWithTag("Bot");
         if (bot != null)
         {
-            MonoBehaviour botScript = bot.GetComponent<MonoBehaviour>(); // Reemplaza con tu script de bot
+            MonoBehaviour botScript = bot.GetComponent<MonoBehaviour>();
             if (botScript != null)
             {
                 botScript.enabled = false;
@@ -194,7 +221,7 @@ public class GameManager : MonoBehaviour
     }
 
     // ========================================
-    // MÉTODOS DE PERSONAJES (EXISTENTES)
+    // MÉTODOS DE PERSONAJES
     // ========================================
 
     public void SeleccionarPersonaje(int index)
@@ -202,13 +229,18 @@ public class GameManager : MonoBehaviour
         if (personajes != null && index >= 0 && index < personajes.Count)
         {
             jugadorSeleccionado = index;
-            PlayerPrefs.SetInt("JugadorIndex", index);
+
+            // ✅ USAR SOLO UNA CLAVE
+            PlayerPrefs.SetInt("JugadorSeleccionado", index);
             PlayerPrefs.Save();
-            Debug.Log($"✅ Personaje seleccionado: {personajes[index].nombre}");
+
+            Personaje p = personajes[index];
+            Debug.Log($"✅ Personaje seleccionado: {p.nombre} (Index: {index})");
+            Debug.Log($"📁 Prefab asignado: {(p.personajeJugable != null ? p.personajeJugable.name : "NULL - ERROR!")}");
         }
         else
         {
-            Debug.LogWarning($"⚠️ Índice de personaje inválido: {index}");
+            Debug.LogError($"⚠️ Índice de personaje inválido: {index} (Total: {personajes?.Count})");
         }
     }
 
@@ -218,6 +250,8 @@ public class GameManager : MonoBehaviour
         {
             return personajes[jugadorSeleccionado];
         }
+
+        Debug.LogWarning("⚠️ No se pudo obtener personaje seleccionado, retornando null");
         return null;
     }
 
@@ -227,18 +261,13 @@ public class GameManager : MonoBehaviour
     }
 
     // ========================================
-    // MÉTODOS AUXILIARES (EXISTENTES)
+    // MÉTODOS AUXILIARES
     // ========================================
 
-    /// <summary>
-    /// Fuerza el respawn de jugadores (SOLO usar si es absolutamente necesario)
-    /// Normalmente PlayerScenePersister maneja esto automáticamente
-    /// </summary>
     public void ForceRespawnPlayers()
     {
         Debug.LogWarning("🔄 ForceRespawnPlayers llamado - Pidiendo a PlayerScenePersister que recree jugadores");
 
-        // Destruir jugadores existentes
         GameObject existingPlayer = GameObject.FindGameObjectWithTag("Player");
         GameObject existingBot = GameObject.FindGameObjectWithTag("Bot");
 
@@ -254,7 +283,6 @@ public class GameManager : MonoBehaviour
             Debug.Log("🗑️ Bot destruido");
         }
 
-        // Pedir a PlayerScenePersister que recree
         StartCoroutine(RequestPlayerRecreation());
     }
 
@@ -273,30 +301,22 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Obtiene referencia al jugador actual
-    /// </summary>
     public GameObject GetPlayer()
     {
         if (PlayerScenePersister.Instance != null)
         {
             return PlayerScenePersister.Instance.GetPlayer();
         }
-
-        // Fallback: buscar por tag
         return GameObject.FindGameObjectWithTag("Player");
     }
 
-    /// <summary>
-    /// Verifica si hay un jugador en la escena
-    /// </summary>
     public bool HasPlayer()
     {
         return GetPlayer() != null;
     }
 
     // ========================================
-    // NUEVOS MÉTODOS PARA OBTENER ESTADO DEL JUEGO
+    // MÉTODOS PARA OBTENER ESTADO DEL JUEGO
     // ========================================
 
     public bool IsGameActive()
@@ -314,13 +334,33 @@ public class GameManager : MonoBehaviour
         return totalCheckpoints;
     }
 
+    public void LoadLevel(int level)
+    {
+        Debug.Log($"🔄 Cargando nivel {level}");
+
+        if (level == 1)
+        {
+            ResetCompleteGame();
+        }
+
+        SceneManager.LoadScene($"Nivel{level}");
+    }
+
     // ========================================
     // LIMPIEZA
     // ========================================
 
     void OnDestroy()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        Debug.Log("🗑️ GameManager destruido");
+        if (Instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            Debug.Log("🗑️ GameManager principal destruido - Esto NO debería pasar!");
+        }
+    }
+
+    void OnApplicationQuit()
+    {
+        Debug.Log("🚪 Aplicación cerrada - GameManager finalizado");
     }
 }

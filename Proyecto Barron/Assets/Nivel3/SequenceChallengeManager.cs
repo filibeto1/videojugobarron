@@ -58,7 +58,7 @@ public class SequenceChallengeManager : MonoBehaviour
     private Dictionary<string, PlayerChallengeState> playerStates = new Dictionary<string, PlayerChallengeState>();
     private PlayerController player1Controller;
     private BotController player2Controller;
-    private bool playersInitialized = false;
+    //private bool playersInitialized = false;
     private List<TMP_InputField> activeInputFields = new List<TMP_InputField>();
     private bool isGameStarted = false;
 
@@ -1071,7 +1071,7 @@ public class SequenceChallengeManager : MonoBehaviour
     {
         yield return new WaitForSeconds(1f);
         FindPlayerControllers();
-        playersInitialized = true;
+        //playersInitialized = true;
 
         SetupCameraFollowScripts();
     }

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections.Generic;
+using System.Collections;
 
 public class GameController : MonoBehaviour
 {
@@ -20,7 +21,10 @@ public class GameController : MonoBehaviour
     public Slider barraDeTiempo;
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI contadorObjetivosText;
-    public TextMeshProUGUI mensajeTexto; // NUEVA REFERENCIA para el MensajePanel
+    public TextMeshProUGUI mensajeTexto;
+
+    // AGREGADO: Referencia para spawn del jugador
+    public GameObject playerPrefab;
 
     private int puntuacionNivel = 100;
     private int puntosPorVida = 50;
@@ -48,6 +52,9 @@ public class GameController : MonoBehaviour
 
     void Start()
     {
+        // SOLUCIÓN: Crear jugador si no existe
+        CrearJugadorSiNoExiste();
+
         if (corazones == null || corazones.Length == 0)
         {
             Debug.LogError("No se han asignado las referencias de corazones en el Inspector");
@@ -73,7 +80,7 @@ public class GameController : MonoBehaviour
         ActualizarVidas();
         ActualizarContadorPares();
         ActualizarContadorObjetivos();
-        ActualizarMensajeModalidad(); // ACTUALIZAR EL MENSAJE AL INICIAR
+        ActualizarMensajeModalidad();
 
         tiempoRestante = tiempoLimite;
 
@@ -89,8 +96,62 @@ public class GameController : MonoBehaviour
 
         Debug.Log("✅ GameController iniciado - Modalidad: Recogiendo Números PARES");
     }
+    void CrearJugadorSiNoExiste()
+    {
+        // Si no hay PlayerScenePersister, créalo
+        if (PlayerScenePersister.Instance == null)
+        {
+            Debug.Log("🔄 Creando PlayerScenePersister automáticamente");
+            GameObject pspObject = new GameObject("PlayerScenePersister");
+            pspObject.AddComponent<PlayerScenePersister>();
 
-    // NUEVO MÉTODO: ACTUALIZAR EL MENSAJE DE MODALIDAD
+            // Asignar prefab si está disponible
+            PlayerScenePersister persister = pspObject.GetComponent<PlayerScenePersister>();
+            if (playerPrefab != null)
+            {
+                persister.playerPrefab = playerPrefab;
+            }
+        }
+
+        // Esperar a que PlayerScenePersister cree el jugador
+        StartCoroutine(EsperarJugador());
+    }
+    IEnumerator EsperarJugador()
+    {
+        float tiempoEspera = 3f;
+        float tiempoTranscurrido = 0f;
+
+        while (tiempoTranscurrido < tiempoEspera)
+        {
+            GameObject jugador = GameObject.FindGameObjectWithTag("Player");
+            if (jugador != null)
+            {
+                Debug.Log("✅ Jugador encontrado después de " + tiempoTranscurrido + " segundos");
+                break;
+            }
+
+            tiempoTranscurrido += Time.deltaTime;
+            yield return null;
+        }
+
+        if (GameObject.FindGameObjectWithTag("Player") == null)
+        {
+            Debug.LogError("❌ No se pudo crear el jugador después de " + tiempoEspera + " segundos");
+        }
+    }
+    void VerificarJugadorNuevamente()
+    {
+        GameObject jugador = GameObject.FindGameObjectWithTag("Player");
+        if (jugador == null)
+        {
+            Debug.LogError("❌ CRÍTICO: Jugador nunca apareció en la escena");
+        }
+        else
+        {
+            Debug.Log("✅ Jugador apareció después de espera: " + jugador.name);
+        }
+    }
+
     void ActualizarMensajeModalidad()
     {
         if (mensajeTexto != null)
@@ -251,7 +312,6 @@ public class GameController : MonoBehaviour
         tiempoLimite = 80f;
         tiempoRestante = tiempoLimite;
 
-        // REINICIAR CONTADOR A 5 PARA LA NUEVA RONDA
         numerosParesAgarrados = 0;
 
         ReactivarTodosLosNumeros();
@@ -265,7 +325,7 @@ public class GameController : MonoBehaviour
         ActualizarTextoDeTiempo();
         ActualizarContadorPares();
         ActualizarContadorObjetivos();
-        ActualizarMensajeModalidad(); // ACTUALIZAR EL MENSAJE AL CAMBIAR MODALIDAD
+        ActualizarMensajeModalidad();
 
         Debug.Log("✅ Cambiado a modalidad: Recogiendo Números IMPARES - Tiempo: 80s");
     }

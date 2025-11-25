@@ -34,6 +34,17 @@ public class GameModeSelector : MonoBehaviour
     {
         Debug.Log("✅ GameModeSelector iniciado");
 
+        // ✅ FORZAR ACTIVACIÓN DEL PANEL AL INICIO
+        if (modeSelectionPanel != null)
+        {
+            modeSelectionPanel.SetActive(true);
+            Debug.Log($"📋 Panel de selección FORZADO A TRUE: {modeSelectionPanel.activeSelf}");
+        }
+        else
+        {
+            Debug.LogError("❌ modeSelectionPanel es NULL!");
+        }
+
         gameStarted = false;
         twoPlayerMode = false;
         vsBotMode = false;
@@ -46,25 +57,60 @@ public class GameModeSelector : MonoBehaviour
         if (countdownManager == null)
             countdownManager = FindObjectOfType<CountdownManager>();
 
-        SetupPanels();
+        // ✅ VERIFICAR BOTONES
+        if (singlePlayerButton == null)
+        {
+            Debug.LogError("❌ singlePlayerButton es NULL!");
+        }
+        else
+        {
+            Debug.Log($"✅ Single Player Button encontrado: {singlePlayerButton.name}");
+        }
+
+        if (twoPlayersButton == null)
+        {
+            Debug.LogError("❌ twoPlayersButton es NULL!");
+        }
+        else
+        {
+            Debug.Log($"✅ Two Players Button encontrado: {twoPlayersButton.name}");
+        }
 
         if (singlePlayerButton != null)
         {
             singlePlayerButton.onClick.RemoveAllListeners();
-            singlePlayerButton.onClick.AddListener(() => StartCoroutine(SelectGameMode(true)));
+            singlePlayerButton.onClick.AddListener(() => {
+                Debug.Log("🖱️ BOTÓN SINGLE PLAYER CLICKEADO!");
+                StartCoroutine(SelectGameMode(true));
+            });
             Debug.Log("✅ Single Player Button configurado como MODO VS BOT");
         }
 
         if (twoPlayersButton != null)
         {
             twoPlayersButton.onClick.RemoveAllListeners();
-            twoPlayersButton.onClick.AddListener(() => StartCoroutine(SelectGameMode(false)));
+            twoPlayersButton.onClick.AddListener(() => {
+                Debug.Log("🖱️ BOTÓN TWO PLAYERS CLICKEADO!");
+                StartCoroutine(SelectGameMode(false));
+            });
             Debug.Log("✅ Two Players Button configurado como MODO 2 JUGADORES");
         }
 
         DisableAllControls();
     }
+    [ContextMenu("🧪 PRUEBA: Forzar Modo VS Bot")]
+    void TestVsBot()
+    {
+        Debug.Log("🧪 PRUEBA MANUAL: Iniciando modo VS Bot");
+        StartCoroutine(SelectGameMode(true));
+    }
 
+    [ContextMenu("🧪 PRUEBA: Forzar Modo 2 Jugadores")]
+    void TestTwoPlayers()
+    {
+        Debug.Log("🧪 PRUEBA MANUAL: Iniciando modo 2 jugadores");
+        StartCoroutine(SelectGameMode(false));
+    }
     void FindSpawnPointsIfNull()
     {
         if (playerSpawnPoint == null)
@@ -323,21 +369,32 @@ public class GameModeSelector : MonoBehaviour
             Debug.Log($"📍 Spawn point del bot actualizado a: {newBotPosition}");
         }
     }
-
     IEnumerator SetupTwoPlayerMode()
     {
         Debug.Log("👥 Configurando modo 2 jugadores...");
 
         FindExistingPlayer1();
 
+        // ✅ SI NO EXISTE Player1, CREARLO
         if (currentPlayer1 == null)
         {
-            Debug.LogError("❌ No se encontró Player1 en la escena");
+            Debug.Log("⚠️ Player1 no existe - Creando desde cero...");
+            currentPlayer1 = FindOrCreatePlayer("Player1", playerSpawnPoint, 1);
+        }
+
+        if (currentPlayer1 == null)
+        {
+            Debug.LogError("❌ ERROR CRÍTICO: No se pudo crear o encontrar Player1");
             yield break;
         }
 
+        // ✅ CONFIGURAR Player1
+        ConfigurePlayer(currentPlayer1, 1);
+        Debug.Log($"✅ Player1 configurado: {currentPlayer1.name}");
+
         yield return new WaitForSeconds(0.1f);
 
+        // ✅ CREAR Player2
         currentPlayer2 = FindOrCreatePlayer("Player2", player2SpawnPoint, 2);
 
         if (currentPlayer2 != null)
@@ -489,26 +546,34 @@ public class GameModeSelector : MonoBehaviour
             return null;
         }
     }
-
     void FindExistingPlayer1()
     {
         if (currentPlayer1 == null)
         {
+            // ✅ PRIMERO: Buscar por nombre específico
             currentPlayer1 = GameObject.Find("Player1");
+
+            // ✅ SEGUNDO: Si no existe, buscar cualquier jugador con tag "Player"
             if (currentPlayer1 == null)
             {
                 GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
                 if (players.Length > 0)
                 {
                     currentPlayer1 = players[0];
+
+                    // ✅ RENOMBRAR para que el sistema lo reconozca
                     currentPlayer1.name = "Player1";
-                    Debug.Log($"✅ Player1 encontrado por tag: {currentPlayer1.name}");
+                    Debug.Log($"✅ Jugador encontrado y renombrado: {currentPlayer1.name}");
                 }
             }
 
             if (currentPlayer1 != null)
             {
                 Debug.Log($"✅ Player1 configurado: {currentPlayer1.name}");
+            }
+            else
+            {
+                Debug.LogError("❌ No se encontró ningún jugador en la escena");
             }
         }
     }

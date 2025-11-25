@@ -1,181 +1,250 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SeguirJugador : MonoBehaviour
 {
-    [Header("Target Configuration")]
-    public Transform objetivo; // Transform del personaje a seguir
-    public string playerTargetName = ""; // Nombre específico del jugador a seguir
+    [Header("Configuración")]
+    public Transform player;
+    public Vector3 offset = new Vector3(0, 0, -10);
 
-    [Header("Camera Settings")]
-    public Vector3 offset = new Vector3(0f, 2f, -10f); // Desplazamiento de la cámara
-    public float suavizado = 0.125f; // Suavizado para un movimiento más fluido
+    [Header("Opciones")]
+    public bool seguimientoInstantaneo = true;
+    public float suavizado = 5f;
 
-    [Header("Split Screen Config")]
-    public bool isTopScreen = true; // true = pantalla superior (Player 1)
+    // ✅ PROPIEDADES QUE FALTABAN - necesarias para otros scripts
+    public bool isTopScreen = false;
+    public string playerTargetName = "Player"; // ✅ IMPORTANTE: Configurar diferente para cada cámara
 
-    private Camera playerCamera;
-    private bool targetFound = false;
+    [Header("Debug")]
+    public bool mostrarDebug = false;
+
+    private bool jugadorEncontrado = false;
+    private float tiempoBusqueda = 0f;
+    private float intervaloBusqueda = 0.5f;
+    private int intentosBusqueda = 0;
 
     void Start()
     {
-        playerCamera = GetComponent<Camera>();
+        if (mostrarDebug)
+            Debug.Log($"🚀 SEGUIR JUGADOR INICIADO - Buscando: '{playerTargetName}'");
 
-        // Configurar viewport para split-screen
-        if (playerCamera != null)
+        BuscarJugadorInmediato();
+
+        if (player != null)
         {
-            if (isTopScreen)
-            {
-                // Pantalla superior (Player 1)
-                playerCamera.rect = new Rect(0f, 0.5f, 1f, 0.5f);
-                Debug.Log($"🎥 {gameObject.name}: PANTALLA SUPERIOR - Buscando: {playerTargetName}");
-            }
-            else
-            {
-                // Pantalla inferior (Player 2)
-                playerCamera.rect = new Rect(0f, 0f, 1f, 0.5f);
-                Debug.Log($"🎥 {gameObject.name}: PANTALLA INFERIOR - Buscando: {playerTargetName}");
-            }
-        }
-
-        // Buscar el jugador objetivo inmediatamente
-        FindSpecificPlayer();
-    }
-
-    public void SetObjetivo(Transform nuevoObjetivo)
-    {
-        objetivo = nuevoObjetivo;
-        targetFound = objetivo != null;
-        if (targetFound)
-        {
-            Debug.Log($"🎯 {gameObject.name} estableció objetivo: {objetivo.name}");
+            PosicionarCamaraInmediatamente();
         }
     }
 
-    public void SetPlayerTargetName(string playerName)
+    void Update()
     {
-        playerTargetName = playerName;
-        FindSpecificPlayer();
+        if (player == null && !jugadorEncontrado)
+        {
+            tiempoBusqueda += Time.deltaTime;
+            if (tiempoBusqueda >= intervaloBusqueda)
+            {
+                BuscarJugadorInmediato();
+                tiempoBusqueda = 0f;
+            }
+        }
     }
 
-    private void LateUpdate()
+    void LateUpdate()
     {
-        if (objetivo == null && !targetFound)
+        if (player == null)
         {
-            FindSpecificPlayer();
+            if (mostrarDebug && Time.frameCount % 300 == 0)
+                Debug.LogWarning($"⏳ LateUpdate: Esperando jugador '{playerTargetName}'...");
             return;
         }
 
-        if (objetivo != null)
+        Vector3 posicionDeseada = player.position + offset;
+        posicionDeseada.z = offset.z;
+
+        if (seguimientoInstantaneo)
         {
-            // Calcula la nueva posición de la cámara con el desplazamiento
-            Vector3 posicionDeseada = objetivo.position + offset;
-
-            // Interpola suavemente la posición de la cámara
-            Vector3 posicionSuavizada = Vector3.Lerp(transform.position, posicionDeseada, suavizado);
-            transform.position = posicionSuavizada;
-        }
-    }
-
-    void FindSpecificPlayer()
-    {
-        // Si ya tenemos un objetivo asignado, no buscar
-        if (objetivo != null)
-        {
-            targetFound = true;
-            return;
-        }
-
-        // Si tenemos un nombre específico, buscar por nombre
-        if (!string.IsNullOrEmpty(playerTargetName))
-        {
-            GameObject specificPlayer = GameObject.Find(playerTargetName);
-            if (specificPlayer != null)
-            {
-                objetivo = specificPlayer.transform;
-                targetFound = true;
-                Debug.Log($"✅ {gameObject.name} encontró objetivo específico: {objetivo.name}");
-                return;
-            }
-        }
-
-        // Buscar por tag y filtrar por nombre
-        GameObject[] allPlayers = GameObject.FindGameObjectsWithTag("Player");
-
-        if (allPlayers.Length > 0)
-        {
-            // Si hay nombre específico, buscar coincidencia
-            if (!string.IsNullOrEmpty(playerTargetName))
-            {
-                foreach (GameObject player in allPlayers)
-                {
-                    if (player.name == playerTargetName ||
-                        player.name.Contains(playerTargetName) ||
-                        (playerTargetName == "Player1" && !player.name.Contains("2")) ||
-                        (playerTargetName == "Player2" && player.name.Contains("2")))
-                    {
-                        objetivo = player.transform;
-                        targetFound = true;
-                        Debug.Log($"✅ {gameObject.name} encontró objetivo filtrado: {objetivo.name}");
-                        return;
-                    }
-                }
-            }
-
-            // Si no hay nombre específico o no se encontró, asignar por posición
-            if (objetivo == null)
-            {
-                System.Array.Sort(allPlayers, (a, b) => a.transform.position.x.CompareTo(b.transform.position.x));
-
-                if (isTopScreen && allPlayers.Length >= 1)
-                {
-                    // Cámara superior sigue al jugador más a la izquierda (Player1)
-                    objetivo = allPlayers[0].transform;
-                    Debug.Log($"🎯 {gameObject.name} asignado a Player1 por posición: {objetivo.name}");
-                }
-                else if (!isTopScreen && allPlayers.Length >= 2)
-                {
-                    // Cámara inferior sigue al jugador más a la derecha (Player2)
-                    objetivo = allPlayers[allPlayers.Length - 1].transform;
-                    Debug.Log($"🎯 {gameObject.name} asignado a Player2 por posición: {objetivo.name}");
-                }
-                else if (allPlayers.Length == 1)
-                {
-                    // Solo hay un jugador
-                    objetivo = allPlayers[0].transform;
-                    Debug.Log($"🎯 {gameObject.name} asignado al único jugador: {objetivo.name}");
-                }
-
-                targetFound = objetivo != null;
-            }
+            transform.position = posicionDeseada;
         }
         else
         {
-            // Debug ocasional para no saturar
-            if (Time.frameCount % 120 == 0)
+            transform.position = Vector3.Lerp(transform.position, posicionDeseada, suavizado * Time.deltaTime);
+        }
+    }
+
+    void BuscarJugadorInmediato()
+    {
+        intentosBusqueda++;
+
+        if (mostrarDebug && intentosBusqueda <= 3)
+            Debug.Log($"🔍 BUSCANDO JUGADOR: '{playerTargetName}' (Intento {intentosBusqueda})");
+
+        GameObject jugadorObj = null;
+
+        // ✅ PRIORIDAD 1: Buscar por el nombre específico configurado
+        if (!string.IsNullOrEmpty(playerTargetName))
+        {
+            jugadorObj = GameObject.Find(playerTargetName);
+
+            if (jugadorObj == null)
             {
-                Debug.LogWarning($"⚠️ {gameObject.name}: Esperando que aparezcan jugadores...");
+                // Buscar con "(Clone)" al final (común en instancias)
+                jugadorObj = GameObject.Find(playerTargetName + "(Clone)");
+            }
+        }
+
+        // ✅ PRIORIDAD 2: Si no se configuró nombre específico, buscar por tag
+        if (jugadorObj == null && string.IsNullOrEmpty(playerTargetName))
+        {
+            jugadorObj = GameObject.FindGameObjectWithTag("Player");
+        }
+
+        // ✅ PRIORIDAD 3: Búsqueda avanzada solo si aún no se encontró
+        if (jugadorObj == null)
+        {
+            GameObject[] todosObjetos = FindObjectsOfType<GameObject>();
+            foreach (GameObject obj in todosObjetos)
+            {
+                // Excluir objetos que NO son jugadores reales
+                if (obj.name.Contains("PlayerScenePersister") ||
+                    obj.name.Contains("PlayerManager") ||
+                    obj.name.Contains("GameManager"))
+                {
+                    continue;
+                }
+
+                // Buscar coincidencia con playerTargetName
+                if (obj.name.Contains(playerTargetName) && obj.activeInHierarchy)
+                {
+                    // Verificar que tenga componentes de jugador
+                    if (obj.GetComponent<Rigidbody2D>() != null ||
+                        obj.GetComponent<PlayerController>() != null ||
+                        obj.GetComponent<BotController>() != null)
+                    {
+                        jugadorObj = obj;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (jugadorObj != null)
+        {
+            player = jugadorObj.transform;
+            jugadorEncontrado = true;
+
+            Debug.Log($"✅ ¡JUGADOR ENCONTRADO! → {player.name} (Buscando: '{playerTargetName}', Intento {intentosBusqueda})");
+            PosicionarCamaraInmediatamente();
+        }
+        else
+        {
+            if (intentosBusqueda == 10)
+            {
+                Debug.LogWarning($"⏳ Esperando jugador '{playerTargetName}'... ({intentosBusqueda} intentos)");
+            }
+            else if (intentosBusqueda > 30 && mostrarDebug)
+            {
+                Debug.LogWarning($"⚠️ NO SE ENCONTRÓ '{playerTargetName}' después de {intentosBusqueda} intentos");
             }
         }
     }
 
-    // Método para forzar la búsqueda del objetivo
-    public void ForceFindTarget()
+    void PosicionarCamaraInmediatamente()
     {
-        targetFound = false;
-        objetivo = null;
-        FindSpecificPlayer();
+        if (player != null)
+        {
+            Vector3 posicionInicial = player.position + offset;
+            posicionInicial.z = offset.z;
+            transform.position = posicionInicial;
+
+            if (mostrarDebug)
+                Debug.Log($"📌 CÁMARA POSICIONADA: {transform.position}");
+        }
     }
 
-    // Debug visual en el editor
-    void OnDrawGizmos()
+    // ✅ MÉTODOS QUE FALTABAN - necesarios para otros scripts
+
+    public void SetPlayerTarget(Transform newTarget)
     {
-        if (objetivo != null)
+        player = newTarget;
+        if (newTarget != null)
         {
-            Gizmos.color = isTopScreen ? Color.green : Color.blue;
-            Gizmos.DrawLine(transform.position, objetivo.position);
-            Gizmos.DrawWireSphere(objetivo.position, 0.5f);
+            jugadorEncontrado = true;
+            intentosBusqueda = 0;
+            Debug.Log($"✅ Jugador asignado manualmente: {newTarget.name}");
+
+            if (seguimientoInstantaneo)
+            {
+                PosicionarCamaraInmediatamente();
+            }
         }
+    }
+
+    public void ForceFindTarget()
+    {
+        if (mostrarDebug)
+            Debug.Log($"🔄 ForceFindTarget llamado - Buscando '{playerTargetName}' forzadamente");
+
+        jugadorEncontrado = false;
+        player = null;
+        tiempoBusqueda = 0f;
+        intentosBusqueda = 0;
+
+        BuscarJugadorInmediato();
+    }
+
+    public void SetSeguimientoInstantaneo(bool instantaneo)
+    {
+        seguimientoInstantaneo = instantaneo;
+        if (mostrarDebug)
+        {
+            Debug.Log($"⚡ Seguimiento {(instantaneo ? "INSTANTÁNEO" : "SUAVIZADO")}");
+        }
+    }
+
+    [ContextMenu("Diagnóstico Rápido")]
+    public void DiagnosticoRapido()
+    {
+        Debug.Log("=== DIAGNÓSTICO CÁMARA ===");
+        Debug.Log($"🎯 Jugador: {(player != null ? player.name : "NULL")}");
+        Debug.Log($"🔎 Buscando: '{playerTargetName}'");
+        Debug.Log($"📍 Pos Cámara: {transform.position}");
+        Debug.Log($"🚀 Offset: {offset}");
+        Debug.Log($"⚡ Modo: {(seguimientoInstantaneo ? "Instantáneo" : "Suavizado")}");
+        Debug.Log($"🔍 Encontrado: {jugadorEncontrado}");
+        Debug.Log($"🔢 Intentos de búsqueda: {intentosBusqueda}");
+
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        Debug.Log($"👥 Jugadores con tag 'Player': {players.Length}");
+
+        foreach (GameObject p in players)
+        {
+            Debug.Log($"   - {p.name} en posición: {p.transform.position}");
+        }
+
+        // Buscar objetos con "Player" en el nombre
+        GameObject[] todosObjetos = FindObjectsOfType<GameObject>();
+        int contadorPlayer = 0;
+        foreach (GameObject obj in todosObjetos)
+        {
+            if (obj.name.Contains("Player"))
+            {
+                contadorPlayer++;
+                Debug.Log($"   🔍 Encontrado: {obj.name} (Activo: {obj.activeInHierarchy})");
+            }
+        }
+        Debug.Log($"📊 Total objetos con 'Player' en nombre: {contadorPlayer}");
+        Debug.Log("========================");
+    }
+
+    public void PrintEstado()
+    {
+        Debug.Log("=== ESTADO SEGUIRJUGADOR ===");
+        Debug.Log($"🎯 Jugador: {(player != null ? player.name : "NO ASIGNADO")}");
+        Debug.Log($"🔎 Buscando: '{playerTargetName}'");
+        Debug.Log($"📍 Posición Cámara: {transform.position}");
+        Debug.Log($"🚀 Posición Jugador: {(player != null ? player.position.ToString() : "N/A")}");
+        Debug.Log($"⚡ Modo: {(seguimientoInstantaneo ? "Instantáneo" : "Suavizado")}");
+        Debug.Log($"🔍 Jugador Encontrado: {jugadorEncontrado}");
+        Debug.Log($"🔢 Intentos: {intentosBusqueda}");
+        Debug.Log("=============================");
     }
 }

@@ -163,7 +163,7 @@ public class PlayerController : MonoBehaviour
         velocity = Vector3.zero;
     }
 
-    void CacheAnimatorParameters()
+    private void CacheAnimatorParameters()
     {
         hasAnimator = animator != null;
 
@@ -173,18 +173,15 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        // ✅ USAR LOS PARÁMETROS QUE REALMENTE EXISTEN EN TU ANIMATOR
         isMovingHash = Animator.StringToHash("IsMoving");
-        isGroundedHash = Animator.StringToHash("IsGrounded");
-        isJumpingHash = Animator.StringToHash("IsJumping");
-        isFallingHash = Animator.StringToHash("IsFalling");
-        speedHash = Animator.StringToHash("speed");
-        yVelocityHash = Animator.StringToHash("yVelocity");
-        takeDamageHash = Animator.StringToHash("TakeDamage");
-        hurtHash = Animator.StringToHash("hurt");
-        dieHash = Animator.StringToHash("Die");
-        deadHash = Animator.StringToHash("dead");
-        respawnHash = Animator.StringToHash("Respawn");
-        victoryHash = Animator.StringToHash("Victory");
+        isGroundedHash = Animator.StringToHash("grounded");      // Usar "grounded" en lugar de "IsGrounded"
+        isJumpingHash = Animator.StringToHash("hurt");           // Temporal: usar "hurt" para probar
+        isFallingHash = Animator.StringToHash("dead");           // Temporal: usar "dead" para probar  
+        speedHash = Animator.StringToHash("IsMoving");           // Temporal: usar IsMoving para velocidad
+        yVelocityHash = Animator.StringToHash("velocityY");      // Usar "velocityY" en lugar de "yVelocity"
+
+        Debug.Log("✅ Parámetros del Animator configurados con nombres REALES");
     }
 
     void Start()
@@ -457,14 +454,14 @@ public class PlayerController : MonoBehaviour
         switch (playerNumber)
         {
             case 1:
-                // Jugador 1: Flechas izquierda/derecha
-                if (Input.GetKey(KeyCode.RightArrow)) return 1f;
-                if (Input.GetKey(KeyCode.LeftArrow)) return -1f;
-                break;
-            case 2:
-                // Jugador 2: A/D
+                // Jugador 1: Solo WASD
                 if (Input.GetKey(KeyCode.D)) return 1f;
                 if (Input.GetKey(KeyCode.A)) return -1f;
+                break;
+            case 2:
+                // Jugador 2: Solo Flechas
+                if (Input.GetKey(KeyCode.RightArrow)) return 1f;
+                if (Input.GetKey(KeyCode.LeftArrow)) return -1f;
                 break;
         }
         return 0f;
@@ -475,15 +472,14 @@ public class PlayerController : MonoBehaviour
         switch (playerNumber)
         {
             case 1:
-                // Jugador 1: Flecha arriba
-                return Input.GetKeyDown(KeyCode.UpArrow);
-            case 2:
-                // Jugador 2: W
+                // Jugador 1: Solo W
                 return Input.GetKeyDown(KeyCode.W);
+            case 2:
+                // Jugador 2: Solo Flecha Arriba
+                return Input.GetKeyDown(KeyCode.UpArrow);
         }
         return false;
     }
-
     public void Jump()
     {
         if (!isInitialized || rb == null) return;
@@ -551,7 +547,6 @@ public class PlayerController : MonoBehaviour
     {
         return isZeroGravityActive;
     }
-
     void UpdateAnimations()
     {
         if (!hasAnimator || !isInitialized) return;
@@ -560,6 +555,10 @@ public class PlayerController : MonoBehaviour
         bool isFalling = rb.velocity.y < -0.1f;
         bool isJumping = rb.velocity.y > 0.1f;
 
+        // DEBUG TEMPORAL
+        Debug.Log($"🎭 Animaciones - Mov: {isMoving}, Salto: {isJumping}, Caída: {isFalling}, Suelo: {isGrounded}");
+
+        // ✅ CORREGIDO: Usar los mismos hashes que en CacheAnimatorParameters
         SafeSetBool(isMovingHash, isMoving);
         SafeSetBool(isGroundedHash, isGrounded);
         SafeSetBool(isJumpingHash, isJumping);
@@ -568,6 +567,7 @@ public class PlayerController : MonoBehaviour
         SafeSetFloat(yVelocityHash, rb.velocity.y);
     }
 
+    // MANTÉN ESTOS MÉTODOS ORIGINALES:
     void SafeSetBool(int paramHash, bool value)
     {
         if (hasAnimator && HasAnimatorParameter(animator, paramHash))

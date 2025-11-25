@@ -3,68 +3,92 @@
   "WorkspaceRootPath": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\BotController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\BotController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\GameModeSelector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\GameModeSelector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\CountdownManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\New Folder\\CountdownManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\PlayerManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\PlayerManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Mechanics\\PlayerController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Mechanics\\PlayerController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\SequenceChallengeManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\SequenceChallengeManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\MultiKeyboardInputManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\New Folder\\MultiKeyboardInputManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\PlayerScenePersister.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\PlayerScenePersister.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\SeguirJugador.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\SeguirJugador.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\Checkpoint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\Checkpoint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\PlayerScenePersister.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\PlayerScenePersister.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\InicioJugador.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\InicioJugador.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\menuprincipal\\GameManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\menuprincipal\\GameManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\SplitScreenManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\SplitScreenManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\SequenceChallengeManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\SequenceChallengeManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\InputDiagnostic.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\New Folder\\InputDiagnostic.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\GameModeSelector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\GameModeSelector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\MovingObstacle.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\MovingObstacle.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\PlayerManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\PlayerManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\VictoriaDetector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\VictoriaDetector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Gameplay\\EnablePlayerInput.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Gameplay\\EnablePlayerInput.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\CameraFollow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\CameraFollow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Mechanics\\PlayerController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Mechanics\\PlayerController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\BotController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\BotController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\ControladorTiempo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\ControladorTiempo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\menuprincipal\\Personaje.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\menuprincipal\\Personaje.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\BotonGravedad.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\New Folder\\BotonGravedad.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\VictoriaDetector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\VictoriaDetector.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\PlayerMovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\New Folder\\PlayerMovement.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\ControladorSeleccion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\ControladorSeleccion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\SistemaLimpieza.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\SistemaLimpieza.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Mechanics\\GameController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Mechanics\\GameController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\CountdownManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\New Folder\\CountdownManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\Checkpoint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\Checkpoint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\SplitScreenManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Nivel3\\SplitScreenManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -74,7 +98,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 19,
+          "SelectedChildIndex": 14,
           "Children": [
             {
               "$type": "Bookmark",
@@ -94,43 +118,154 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
+              "Title": "EnablePlayerInput.cs",
+              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Gameplay\\EnablePlayerInput.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Gameplay\\EnablePlayerInput.cs",
+              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Gameplay\\EnablePlayerInput.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Gameplay\\EnablePlayerInput.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-22T18:01:52.879Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "InicioJugador.cs",
+              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\InicioJugador.cs",
+              "RelativeDocumentMoniker": "Assets\\InicioJugador.cs",
+              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\InicioJugador.cs",
+              "RelativeToolTip": "Assets\\InicioJugador.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-22T15:45:51.432Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "ControladorTiempo.cs",
+              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\ControladorTiempo.cs",
+              "RelativeDocumentMoniker": "Assets\\ControladorTiempo.cs",
+              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\ControladorTiempo.cs",
+              "RelativeToolTip": "Assets\\ControladorTiempo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-22T04:00:47.937Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "CameraFollow.cs",
+              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\CameraFollow.cs",
+              "RelativeDocumentMoniker": "Assets\\Nivel3\\CameraFollow.cs",
+              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\CameraFollow.cs",
+              "RelativeToolTip": "Assets\\Nivel3\\CameraFollow.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-22T03:03:43.735Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "PlayerMovement.cs",
+              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\PlayerMovement.cs",
+              "RelativeDocumentMoniker": "Assets\\Nivel3\\New Folder\\PlayerMovement.cs",
+              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\PlayerMovement.cs",
+              "RelativeToolTip": "Assets\\Nivel3\\New Folder\\PlayerMovement.cs",
+              "ViewState": "AgIAAEMAAAAAAAAAAAAAAGwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-22T02:58:10.154Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "SistemaLimpieza.cs",
+              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\SistemaLimpieza.cs",
+              "RelativeDocumentMoniker": "Assets\\SistemaLimpieza.cs",
+              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\SistemaLimpieza.cs",
+              "RelativeToolTip": "Assets\\SistemaLimpieza.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAAACkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-22T01:24:30.575Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "ControladorSeleccion.cs",
+              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\ControladorSeleccion.cs",
+              "RelativeDocumentMoniker": "Assets\\ControladorSeleccion.cs",
+              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\ControladorSeleccion.cs",
+              "RelativeToolTip": "Assets\\ControladorSeleccion.cs",
+              "ViewState": "AgIAACUAAAAAAAAAAAAgwEQAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-21T20:22:32.314Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "Personaje.cs",
+              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\menuprincipal\\Personaje.cs",
+              "RelativeDocumentMoniker": "Assets\\menuprincipal\\Personaje.cs",
+              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\menuprincipal\\Personaje.cs",
+              "RelativeToolTip": "Assets\\menuprincipal\\Personaje.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-21T18:57:52.792Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "GameController.cs",
+              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Mechanics\\GameController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Mechanics\\GameController.cs",
+              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Mechanics\\GameController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Mechanics\\GameController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-21T17:18:02.973Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "SeguirJugador.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\SeguirJugador.cs",
               "RelativeDocumentMoniker": "Assets\\SeguirJugador.cs",
               "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\SeguirJugador.cs",
               "RelativeToolTip": "Assets\\SeguirJugador.cs",
-              "ViewState": "AgIAAKAAAAAAAAAAAAAqwLQAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-19T01:48:50.221Z"
+              "WhenOpened": "2025-11-19T01:48:50.221Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 0,
               "Title": "PlayerScenePersister.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\PlayerScenePersister.cs",
               "RelativeDocumentMoniker": "Assets\\Nivel3\\PlayerScenePersister.cs",
               "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\PlayerScenePersister.cs",
               "RelativeToolTip": "Assets\\Nivel3\\PlayerScenePersister.cs",
-              "ViewState": "AgIAANAAAAAAAAAAAAAawHoAAABIAAAAAAAAAA==",
+              "ViewState": "AgIAABEBAAAAAAAAAAAwwCwBAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-19T00:53:40.485Z"
+              "WhenOpened": "2025-11-19T00:53:40.485Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 4,
               "Title": "SequenceChallengeManager.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\SequenceChallengeManager.cs",
               "RelativeDocumentMoniker": "Assets\\Nivel3\\SequenceChallengeManager.cs",
               "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\SequenceChallengeManager.cs",
               "RelativeToolTip": "Assets\\Nivel3\\SequenceChallengeManager.cs",
-              "ViewState": "AgIAAKAEAAAAAAAAAAAqwLcEAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAB4EAAAAAAAAAAAawDEEAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-18T21:32:52.153Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 21,
               "Title": "SplitScreenManager.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\SplitScreenManager.cs",
               "RelativeDocumentMoniker": "Assets\\Nivel3\\SplitScreenManager.cs",
@@ -142,55 +277,32 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 3,
               "Title": "GameManager.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\menuprincipal\\GameManager.cs",
               "RelativeDocumentMoniker": "Assets\\menuprincipal\\GameManager.cs",
               "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\menuprincipal\\GameManager.cs",
               "RelativeToolTip": "Assets\\menuprincipal\\GameManager.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAAB0AAAAyAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-18T17:49:49.542Z"
+              "WhenOpened": "2025-11-18T17:49:49.542Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "InputDiagnostic.cs",
-              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\InputDiagnostic.cs",
-              "RelativeDocumentMoniker": "Assets\\Nivel3\\New Folder\\InputDiagnostic.cs",
-              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\InputDiagnostic.cs",
-              "RelativeToolTip": "Assets\\Nivel3\\New Folder\\InputDiagnostic.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAABwAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-18T16:41:30.918Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "PlayerManager.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\PlayerManager.cs",
               "RelativeDocumentMoniker": "Assets\\Nivel3\\PlayerManager.cs",
               "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\PlayerManager.cs",
               "RelativeToolTip": "Assets\\Nivel3\\PlayerManager.cs",
-              "ViewState": "AgIAAI8AAAAAAAAAAAAqwKYAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-18T15:59:38.711Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "MultiKeyboardInputManager.cs",
-              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\MultiKeyboardInputManager.cs",
-              "RelativeDocumentMoniker": "Assets\\Nivel3\\New Folder\\MultiKeyboardInputManager.cs",
-              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\MultiKeyboardInputManager.cs",
-              "RelativeToolTip": "Assets\\Nivel3\\New Folder\\MultiKeyboardInputManager.cs",
-              "ViewState": "AgIAAAIBAAAAAAAAAAAqwOMAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-18T04:46:33.754Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 19,
               "Title": "CountdownManager.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\New Folder\\CountdownManager.cs",
               "RelativeDocumentMoniker": "Assets\\Nivel3\\New Folder\\CountdownManager.cs",
@@ -202,37 +314,25 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "GameModeSelector.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\GameModeSelector.cs",
               "RelativeDocumentMoniker": "Assets\\Nivel3\\GameModeSelector.cs",
               "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\GameModeSelector.cs",
               "RelativeToolTip": "Assets\\Nivel3\\GameModeSelector.cs",
-              "ViewState": "AgIAAIcCAAAAAAAAAAAqwJ4CAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAHYBAAAAAAAAAAAwwJoBAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-18T04:13:10.748Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "MovingObstacle.cs",
-              "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\MovingObstacle.cs",
-              "RelativeDocumentMoniker": "Assets\\MovingObstacle.cs",
-              "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\MovingObstacle.cs",
-              "RelativeToolTip": "Assets\\MovingObstacle.cs",
-              "ViewState": "AgIAAGYBAAAAAAAAAAAqwIABAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-18T01:00:10.916Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 7,
               "Title": "VictoriaDetector.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\VictoriaDetector.cs",
               "RelativeDocumentMoniker": "Assets\\VictoriaDetector.cs",
               "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\VictoriaDetector.cs",
               "RelativeToolTip": "Assets\\VictoriaDetector.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAIsAAAAAAAAAAAAwwKYAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-18T00:48:50.429Z"
             },
@@ -250,19 +350,19 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 10,
               "Title": "PlayerController.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Mechanics\\PlayerController.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Mechanics\\PlayerController.cs",
               "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Scripts\\Mechanics\\PlayerController.cs",
               "RelativeToolTip": "Assets\\Scripts\\Mechanics\\PlayerController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAMABAAAAAAAAAAAwwOEBAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-18T00:08:41.264Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 20,
               "Title": "Checkpoint.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\Checkpoint.cs",
               "RelativeDocumentMoniker": "Assets\\Nivel3\\Checkpoint.cs",
@@ -274,16 +374,15 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 11,
               "Title": "BotController.cs",
               "DocumentMoniker": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\BotController.cs",
               "RelativeDocumentMoniker": "Assets\\Nivel3\\BotController.cs",
               "ToolTip": "C:\\Users\\filin\\Documents\\CreacionDeVideoJuegos-main\\CreacionDeVideoJuegos-main\\Proyecto Barron\\Assets\\Nivel3\\BotController.cs",
               "RelativeToolTip": "Assets\\Nivel3\\BotController.cs",
-              "ViewState": "AgIAAPkEAAAAAAAAAAAqwAoFAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-17T23:47:38.498Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-17T23:47:38.498Z"
             }
           ]
         }

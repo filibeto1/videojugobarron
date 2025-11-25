@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
 public class PlayerManager : MonoBehaviour
 {
     [Header("Player Settings")]
@@ -20,6 +20,22 @@ public class PlayerManager : MonoBehaviour
 
     void Awake()
     {
+        string currentScene = SceneManager.GetActiveScene().name;
+
+        // ✅ DESTRUIR PlayerManager en escenas con GameModeSelector
+        if (currentScene == "Nivel2 1" || currentScene == "Nivel3")
+        {
+            Debug.Log($"🗑️ PlayerManager DESTRUIDO en {currentScene} - GameModeSelector manejará todo");
+
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+
+            Destroy(gameObject);
+            return;
+        }
+
         if (Instance == null)
         {
             Instance = this;
@@ -267,7 +283,6 @@ public class PlayerManager : MonoBehaviour
             SetupSingleCamera();
         }
     }
-
     void SetupSingleCamera()
     {
         if (players.Count > 0 && players[0] != null)
@@ -287,31 +302,27 @@ public class PlayerManager : MonoBehaviour
                 return;
             }
 
-            mainCamera.enabled = true;
-            mainCamera.orthographicSize = 5f;
-
-            // ✅ CONFIGURAR CameraFollow CORRECTAMENTE
-            CameraFollow cameraFollow = mainCamera.GetComponent<CameraFollow>();
-            if (cameraFollow == null)
+            // ✅ USAR SEGUIRJUGADOR EN LUGAR DE CAMERAFOLLOW
+            SeguirJugador seguirJugador = mainCamera.GetComponent<SeguirJugador>();
+            if (seguirJugador == null)
             {
-                cameraFollow = mainCamera.gameObject.AddComponent<CameraFollow>();
-                Debug.Log("📷 CameraFollow añadido a la cámara principal");
+                seguirJugador = mainCamera.gameObject.AddComponent<SeguirJugador>();
+                Debug.Log("📷 SeguirJugador añadido a la cámara principal");
             }
 
-            cameraFollow.target = players[0].transform;
-            cameraFollow.smoothSpeed = 0.125f;
-            cameraFollow.offset = new Vector3(0f, 2f, -10f); // ✅ Offset con altura para mejor vista
-            cameraFollow.lookAtTarget = false; // ✅ Importante para 2D
+            // ✅ CONFIGURAR PARA SEGUIMIENTO INSTANTÁNEO
+            seguirJugador.seguimientoInstantaneo = true; // ✅ IMPORTANTE
+            seguirJugador.offset = new Vector3(0f, 0f, -10f);
+            seguirJugador.mostrarDebug = true;
 
-            Debug.Log($"📷 Cámara configurada para {players[0].name}");
+            // ✅ ASIGNAR JUGADOR MANUALMENTE
+            seguirJugador.SetPlayerTarget(players[0].transform);
 
-            // ✅ POSICIONAR CÁMARA INMEDIATAMENTE
-            if (players[0] != null)
-            {
-                Vector3 desiredPosition = players[0].transform.position + cameraFollow.offset;
-                desiredPosition.z = cameraFollow.offset.z;
-                mainCamera.transform.position = desiredPosition;
-            }
+            Debug.Log($"📷 Cámara configurada para {players[0].name} - SEGUIMIENTO INSTANTÁNEO");
+
+            // ✅ VERIFICAR POSICIÓN
+            Debug.Log($"📍 Cámara en: {mainCamera.transform.position}");
+            Debug.Log($"🎯 Jugador en: {players[0].transform.position}");
         }
         else
         {
