@@ -9,13 +9,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4520396350849616}
-  - component: {fileID: 114230831923080080}
   - component: {fileID: 212064061491315838}
   - component: {fileID: 95391780594314510}
   - component: {fileID: 50915408107096866}
   - component: {fileID: 8509783501685719824}
   - component: {fileID: 6082575806313374961}
   - component: {fileID: 1824045667}
+  - component: {fileID: 8755914388938112422}
   m_Layer: 13
   m_Name: Player
   m_TagString: Player
@@ -38,46 +38,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114230831923080080
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1208144871472054}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 709ee11994a2f44658e5fc9887c45081, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  horizontalAxis: Horizontal
-  jumpButton: Jump
-  playerNumber: 1
-  useKeyboardInput: 1
-  rb: {fileID: 0}
-  collider2d: {fileID: 0}
-  animator: {fileID: 0}
-  audioSource: {fileID: 0}
-  maxSpeed: 3
-  health: 3
-  controlEnabled: 1
-  jumpAudio: {fileID: 8300000, guid: 1196b9e784337324cb4dfbbc195c2d40, type: 3}
-  damageAudio: {fileID: 0}
-  victoryAudio: {fileID: 0}
-  velocity: {x: 0, y: 0, z: 0}
-  jumpForce: 10
-  moveSpeed: 5
-  gravityScale: 1
-  maxFallSpeed: -35
-  jumpState: 0
-  isGrounded: 1
-  isAlive: 1
-  groundCheck: {fileID: 0}
-  groundCheckRadius: 0.3
-  groundLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
-  canPassThroughPlayers: 1
 --- !u!212 &212064061491315838
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -332,3 +292,47 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.20820613, y: 0.38080195}
   m_EdgeRadius: 0
+--- !u!114 &8755914388938112422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1208144871472054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 709ee11994a2f44658e5fc9887c45081, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  horizontalAxis: Horizontal
+  jumpButton: Jump
+  playerNumber: 1
+  useKeyboardInput: 1
+  useMobileInput: 0
+  movementJoystick: {fileID: 0}
+  jumpJoystick: {fileID: 0}
+  jumpButtonName: Jump
+  rb: {fileID: 0}
+  collider2d: {fileID: 0}
+  animator: {fileID: 0}
+  audioSource: {fileID: 0}
+  maxSpeed: 7
+  health: 3
+  controlEnabled: 1
+  jumpAudio: {fileID: 0}
+  damageAudio: {fileID: 0}
+  victoryAudio: {fileID: 0}
+  velocity: {x: 0, y: 0, z: 0}
+  jumpForce: 10
+  moveSpeed: 5
+  gravityScale: 1
+  maxFallSpeed: -35
+  jumpState: 0
+  isGrounded: 1
+  isAlive: 1
+  groundCheck: {fileID: 0}
+  groundCheckRadius: 0.3
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  canPassThroughPlayers: 1

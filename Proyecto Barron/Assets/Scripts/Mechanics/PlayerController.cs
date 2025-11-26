@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections;
 
 public class PlayerController : MonoBehaviour
@@ -10,6 +11,15 @@ public class PlayerController : MonoBehaviour
     [Header("Player Settings")]
     public int playerNumber = 1;
     public bool useKeyboardInput = true;
+
+    [Header("Mobile Input")]
+    public bool useMobileInput = false;
+    private MobileInputManager mobileInputManager;
+
+    [Header("Joystick Connection")]
+    public VirtualJoystick movementJoystick;
+    public VirtualJoystick jumpJoystick;
+    public string jumpButtonName = "Jump";
 
     [Header("Player Components")]
     public Rigidbody2D rb;
@@ -60,7 +70,6 @@ public class PlayerController : MonoBehaviour
     private bool isZeroGravityActive = false;
     private Coroutine zeroGravityCoroutine;
 
-    // Cache de parámetros del Animator
     private bool hasAnimator = false;
     private int isMovingHash;
     private int isGroundedHash;
@@ -74,6 +83,10 @@ public class PlayerController : MonoBehaviour
     private int deadHash;
     private int respawnHash;
     private int victoryHash;
+
+    // Variables para debug de input
+    private float lastHorizontalInput = 0f;
+    private string lastInputSource = "Ninguno";
 
     public Bounds Bounds
     {
@@ -173,37 +186,211 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // ✅ USAR LOS PARÁMETROS QUE REALMENTE EXISTEN EN TU ANIMATOR
-        isMovingHash = Animator.StringToHash("IsMoving");
-        isGroundedHash = Animator.StringToHash("grounded");      // Usar "grounded" en lugar de "IsGrounded"
-        isJumpingHash = Animator.StringToHash("hurt");           // Temporal: usar "hurt" para probar
-        isFallingHash = Animator.StringToHash("dead");           // Temporal: usar "dead" para probar  
-        speedHash = Animator.StringToHash("IsMoving");           // Temporal: usar IsMoving para velocidad
-        yVelocityHash = Animator.StringToHash("velocityY");      // Usar "velocityY" en lugar de "yVelocity"
+        isMovingHash = Animator.StringToHash("IsMoving");     // Usa el FLOAT que ya tienes
+        isGroundedHash = Animator.StringToHash("grounded");   // ✅ Este SÍ existe (Bool)
+        isJumpingHash = Animator.StringToHash("IsJumping");   // Lo mantienes pero será 0
+        isFallingHash = Animator.StringToHash("IsFalling");   // Lo mantienes pero será 0  
+        speedHash = Animator.StringToHash("IsMoving");        // Usa IsMoving para velocidad también
+        yVelocityHash = Animator.StringToHash("velocityY");   // ✅ Este SÍ existe (Float)
 
-        Debug.Log("✅ Parámetros del Animator configurados con nombres REALES");
+        takeDamageHash = Animator.StringToHash("TakeDamage");
+        hurtHash = Animator.StringToHash("Hurt");
+        dieHash = Animator.StringToHash("Die");
+        deadHash = Animator.StringToHash("IsDead");
+        respawnHash = Animator.StringToHash("Respawn");
+        victoryHash = Animator.StringToHash("Victory");
+
+        Debug.Log("✅ Parámetros del Animator configurados");
     }
 
     void Start()
     {
         originalScale = transform.localScale;
         scaleInitialized = true;
-
+        if (gameObject.tag != "Player")
+        {
+            gameObject.tag = "Player";
+        }
         if (groundLayerMask.value == 1)
         {
             groundLayerMask = LayerMask.GetMask("Ground", "Default", "Platform");
         }
-
         if (canPassThroughPlayers)
         {
             SetupPlayerCollisions();
         }
-
+        DetectPlatformCorrectly();
+        if (useMobileInput)
+        {
+            FindAndConnectJoysticks();
+        }
         StartCoroutine(InitializeWithDelay());
+    }
 
-        Debug.Log("✅ PlayerController inicializado en Start: " + gameObject.name);
-        Debug.Log($"   - Player Number: {playerNumber}");
-        Debug.Log($"   - Use Keyboard Input: {useKeyboardInput}");
+    void OnEnable()
+    {
+        if (animator != null)
+        {
+            Debug.Log("🎬 ========== DIAGNÓSTICO DEL ANIMATOR ==========");
+            Debug.Log($"🎬 Animator Controller: {animator.runtimeAnimatorController?.name ?? "NULL"}");
+            Debug.Log("🎬 PARÁMETROS ENCONTRADOS:");
+
+            foreach (AnimatorControllerParameter param in animator.parameters)
+            {
+                Debug.Log($"   ✅ {param.name} (Tipo: {param.type})");
+            }
+
+            Debug.Log("🎬 ===============================================");
+        }
+        else
+        {
+            Debug.LogError("❌ NO HAY ANIMATOR en " + gameObject.name);
+        }
+    }
+
+    private void DetectPlatformCorrectly()
+    {
+#if UNITY_EDITOR
+        useMobileInput = true;
+        useKeyboardInput = true;
+        Debug.Log("🎮 Editor: JOYSTICKS Y TECLADO ACTIVADOS para pruebas");
+        return;
+#endif
+
+        mobileInputManager = FindObjectOfType<MobileInputManager>();
+
+        if (mobileInputManager != null)
+        {
+            bool isMobile = mobileInputManager.IsMobilePlatform();
+
+            if (isMobile)
+            {
+                useMobileInput = true;
+                useKeyboardInput = false;
+                Debug.Log("📱 Plataforma móvil detectada - Controles móviles ACTIVADOS");
+            }
+            else
+            {
+                useMobileInput = false;
+                useKeyboardInput = true;
+                Debug.Log("⌨️ Plataforma de escritorio - Controles de teclado ACTIVADOS");
+            }
+        }
+        else
+        {
+            bool isMobile = Application.isMobilePlatform ||
+                            Application.platform == RuntimePlatform.Android ||
+                            Application.platform == RuntimePlatform.IPhonePlayer;
+
+            if (isMobile)
+            {
+                useMobileInput = true;
+                useKeyboardInput = false;
+                Debug.Log("📱 Plataforma móvil nativa detectada");
+            }
+            else
+            {
+                useMobileInput = false;
+                useKeyboardInput = true;
+                Debug.Log("⌨️ Plataforma de escritorio nativa detectada");
+            }
+        }
+    }
+
+    private void FindAndConnectJoysticks()
+    {
+        if (!useMobileInput)
+        {
+            Debug.Log("⌨️ Modo teclado - No se buscan joysticks");
+            return;
+        }
+
+        Debug.Log("🔍 Buscando joysticks...");
+
+        VirtualJoystick[] allJoysticks = FindObjectsOfType<VirtualJoystick>(true);
+        Debug.Log($"🕹️ Joysticks encontrados: {allJoysticks.Length}");
+
+        foreach (VirtualJoystick joystick in allJoysticks)
+        {
+            joystick.gameObject.SetActive(true);
+
+            if (joystick.gameObject.name.Contains("Movement"))
+            {
+                movementJoystick = joystick;
+                Debug.Log($"✅ Movement Joystick asignado: {joystick.gameObject.name}");
+            }
+            else if (joystick.gameObject.name.Contains("Jump"))
+            {
+                jumpJoystick = joystick;
+                Debug.Log($"✅ Jump Joystick asignado: {joystick.gameObject.name}");
+            }
+            else if (joystick.isMovementJoystick && movementJoystick == null)
+            {
+                movementJoystick = joystick;
+                Debug.Log($"✅ Movement Joystick asignado por tipo: {joystick.gameObject.name}");
+            }
+            else if (!joystick.isMovementJoystick && jumpJoystick == null)
+            {
+                jumpJoystick = joystick;
+                Debug.Log($"✅ Jump Joystick asignado por tipo: {joystick.gameObject.name}");
+            }
+        }
+
+        if (movementJoystick == null)
+        {
+            Debug.LogWarning("⚠️ No se encontró joystick de movimiento");
+        }
+
+        if (jumpJoystick == null)
+        {
+            Debug.LogWarning("⚠️ No se encontró joystick de salto");
+        }
+    }
+
+    public void SetVirtualJoystick(VirtualJoystick joystick)
+    {
+        if (joystick == null) return;
+
+        joystick.gameObject.SetActive(true);
+
+        if (joystick.gameObject.name.Contains("Movement") || joystick.isMovementJoystick)
+        {
+            movementJoystick = joystick;
+            Debug.Log($"🎮 Joystick de MOVIMIENTO conectado: {joystick.gameObject.name} -> {gameObject.name}");
+        }
+        else
+        {
+            jumpJoystick = joystick;
+            Debug.Log($"🎮 Joystick de SALTO conectado: {joystick.gameObject.name} -> {gameObject.name}");
+        }
+
+        if (Application.isMobilePlatform || Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            useMobileInput = true;
+            useKeyboardInput = false;
+            Debug.Log($"📱 Input móvil ACTIVADO para: {gameObject.name}");
+        }
+    }
+
+    public void ForceReconnectJoysticks()
+    {
+        Debug.Log($"🔄 Forzando reconexión de joysticks para: {gameObject.name}");
+
+        VirtualJoystick[] allJoysticks = FindObjectsOfType<VirtualJoystick>(true);
+
+        if (allJoysticks.Length == 0)
+        {
+            Debug.LogWarning("⚠️ No se encontraron joysticks para reconectar");
+            return;
+        }
+
+        foreach (VirtualJoystick joystick in allJoysticks)
+        {
+            joystick.gameObject.SetActive(true);
+            SetVirtualJoystick(joystick);
+        }
+
+        Debug.Log($"✅ {allJoysticks.Length} joysticks reconectados a: {gameObject.name}");
     }
 
     private void SetupPlayerCollisions()
@@ -301,6 +488,24 @@ public class PlayerController : MonoBehaviour
 
         ClampVelocity();
         UpdateAnimations();
+
+        if (Time.frameCount % 60 == 0)
+        {
+            DebugInputStatus();
+        }
+    }
+
+    private void DebugInputStatus()
+    {
+        float currentInput = GetCurrentHorizontalInput();
+        if (Mathf.Abs(currentInput) > 0.1f || Mathf.Abs(lastHorizontalInput) > 0.1f)
+        {
+            Debug.Log($"🎮 INPUT DEBUG - Fuente: {lastInputSource}, Valor: {currentInput:F2}, " +
+                     $"Móvil: {useMobileInput}, Teclado: {useKeyboardInput}, " +
+                     $"JoystickMov: {(movementJoystick != null ? "✅" : "❌")}, " +
+                     $"Velocidad: {rb.velocity.x:F2}");
+        }
+        lastHorizontalInput = currentInput;
     }
 
     void ClampVelocity()
@@ -322,8 +527,6 @@ public class PlayerController : MonoBehaviour
     void UpdateGroundDetection()
     {
         if (!isInitialized || groundCheck == null) return;
-
-        bool wasGrounded = isGrounded;
 
         Collider2D[] colliders = Physics2D.OverlapCircleAll(groundCheck.position, groundCheckRadius, groundLayerMask);
         bool touchingGround = colliders.Length > 0;
@@ -390,16 +593,7 @@ public class PlayerController : MonoBehaviour
 
     void HandlePlayerControl()
     {
-        float moveHorizontal = 0f;
-
-        if (useKeyboardInput)
-        {
-            moveHorizontal = GetKeyboardHorizontalInput();
-        }
-        else
-        {
-            moveHorizontal = Input.GetAxis(horizontalAxis);
-        }
+        float moveHorizontal = GetCurrentHorizontalInput();
 
         if (rb != null)
         {
@@ -424,18 +618,44 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void HandleJump()
+    private float GetCurrentHorizontalInput()
     {
-        bool jumpPressed = false;
+        float input = 0f;
+
+        if (useMobileInput && movementJoystick != null)
+        {
+            input = movementJoystick.Horizontal();
+            if (Mathf.Abs(input) > 0.01f)
+            {
+                lastInputSource = "Joystick";
+                return input;
+            }
+        }
 
         if (useKeyboardInput)
         {
-            jumpPressed = GetKeyboardJumpInput();
+            input = GetKeyboardHorizontalInput();
+            if (Mathf.Abs(input) > 0.1f)
+            {
+                lastInputSource = "Teclado";
+                return input;
+            }
         }
-        else
+
+        input = GetInputSystemHorizontal();
+        if (Mathf.Abs(input) > 0.1f)
         {
-            jumpPressed = Input.GetButtonDown(jumpButton);
+            lastInputSource = "Sistema";
+            return input;
         }
+
+        lastInputSource = "Ninguno";
+        return 0f;
+    }
+
+    void HandleJump()
+    {
+        bool jumpPressed = GetCurrentJumpInput();
 
         if (jumpPressed)
         {
@@ -449,19 +669,55 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private bool GetCurrentJumpInput()
+    {
+        if (GetInputSystemJump())
+        {
+            lastInputSource = "Botón Salto";
+            Debug.Log("🦘 SALTO DETECTADO desde Botón!");
+            return true;
+        }
+
+        if (useMobileInput && jumpJoystick != null)
+        {
+            bool jumpPressed = jumpJoystick.Vertical() > 0.5f || jumpJoystick.IsJumpPressed();
+            if (jumpPressed)
+            {
+                lastInputSource = "Joystick Salto";
+                Debug.Log("🦘 SALTO DETECTADO desde Joystick!");
+                return true;
+            }
+        }
+
+        if (useKeyboardInput)
+        {
+            bool jumpPressed = GetKeyboardJumpInput();
+            if (jumpPressed)
+            {
+                lastInputSource = "Teclado Salto";
+                Debug.Log("🦘 SALTO DETECTADO desde Teclado!");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // ✅ NUEVO: Métodos corregidos para Input System
     private float GetKeyboardHorizontalInput()
     {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null) return 0f;
+
         switch (playerNumber)
         {
             case 1:
-                // Jugador 1: Solo WASD
-                if (Input.GetKey(KeyCode.D)) return 1f;
-                if (Input.GetKey(KeyCode.A)) return -1f;
+                if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) return 1f;
+                if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) return -1f;
                 break;
             case 2:
-                // Jugador 2: Solo Flechas
-                if (Input.GetKey(KeyCode.RightArrow)) return 1f;
-                if (Input.GetKey(KeyCode.LeftArrow)) return -1f;
+                if (keyboard.rightArrowKey.isPressed) return 1f;
+                if (keyboard.leftArrowKey.isPressed) return -1f;
                 break;
         }
         return 0f;
@@ -469,17 +725,47 @@ public class PlayerController : MonoBehaviour
 
     private bool GetKeyboardJumpInput()
     {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null) return false;
+
         switch (playerNumber)
         {
             case 1:
-                // Jugador 1: Solo W
-                return Input.GetKeyDown(KeyCode.W);
+                return keyboard.wKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame;
             case 2:
-                // Jugador 2: Solo Flecha Arriba
-                return Input.GetKeyDown(KeyCode.UpArrow);
+                return keyboard.upArrowKey.wasPressedThisFrame;
         }
         return false;
     }
+
+    private float GetInputSystemHorizontal()
+    {
+        Gamepad gamepad = Gamepad.current;
+        if (gamepad != null)
+        {
+            return gamepad.leftStick.x.ReadValue();
+        }
+        return 0f;
+    }
+
+    private bool GetInputSystemJump()
+    {
+        Gamepad gamepad = Gamepad.current;
+        if (gamepad != null && gamepad.buttonSouth.wasPressedThisFrame)
+        {
+            return true;
+        }
+
+        // También verificar el teclado como fallback
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     public void Jump()
     {
         if (!isInitialized || rb == null) return;
@@ -498,13 +784,27 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void TryJump()
+    {
+        bool canRememberGround = (Time.time - lastGroundedTime) <= groundRememberTime;
+        bool canJump = (isGrounded || canRememberGround) && !jumpCooldown && isInitialized;
+
+        if (canJump)
+        {
+            Jump();
+        }
+        else
+        {
+            Debug.Log($"❌ No puede saltar - Grounded: {isGrounded}, Cooldown: {jumpCooldown}, Init: {isInitialized}");
+        }
+    }
+
     private IEnumerator EnableJumpAfterDelay()
     {
         yield return new WaitForSeconds(0.2f);
         jumpCooldown = false;
     }
 
-    // Sistema de gravedad cero (sin cambios)
     public void ActivateZeroGravity(float duration, float floatSpeed)
     {
         if (isZeroGravityActive) return;
@@ -547,27 +847,27 @@ public class PlayerController : MonoBehaviour
     {
         return isZeroGravityActive;
     }
+
     void UpdateAnimations()
     {
         if (!hasAnimator || !isInitialized) return;
 
-        bool isMoving = Mathf.Abs(rb.velocity.x) > 0.1f;
+        float horizontalSpeed = Mathf.Abs(rb.velocity.x);
+        bool isMoving = horizontalSpeed > 0.1f;
         bool isFalling = rb.velocity.y < -0.1f;
         bool isJumping = rb.velocity.y > 0.1f;
 
-        // DEBUG TEMPORAL
-        Debug.Log($"🎭 Animaciones - Mov: {isMoving}, Salto: {isJumping}, Caída: {isFalling}, Suelo: {isGrounded}");
-
-        // ✅ CORREGIDO: Usar los mismos hashes que en CacheAnimatorParameters
-        SafeSetBool(isMovingHash, isMoving);
+        SafeSetFloat(isMovingHash, horizontalSpeed);
         SafeSetBool(isGroundedHash, isGrounded);
-        SafeSetBool(isJumpingHash, isJumping);
-        SafeSetBool(isFallingHash, isFalling);
-        SafeSetFloat(speedHash, Mathf.Abs(rb.velocity.x));
         SafeSetFloat(yVelocityHash, rb.velocity.y);
+
+        if (Time.frameCount % 60 == 0)
+        {
+            Debug.Log($"🎬 ANIMACIÓN - Moving: {isMoving} (Speed: {horizontalSpeed:F2}), " +
+                     $"Grounded: {isGrounded}, velocityY: {rb.velocity.y:F2}");
+        }
     }
 
-    // MANTÉN ESTOS MÉTODOS ORIGINALES:
     void SafeSetBool(int paramHash, bool value)
     {
         if (hasAnimator && HasAnimatorParameter(animator, paramHash))
@@ -795,6 +1095,19 @@ public class PlayerController : MonoBehaviour
         return isAlive;
     }
 
+    private void OnDestroy()
+    {
+        if (movementJoystick != null)
+        {
+            // Limpiar referencias si es necesario
+        }
+
+        if (jumpJoystick != null)
+        {
+            // Limpiar referencias si es necesario
+        }
+    }
+
     void OnDrawGizmosSelected()
     {
         if (groundCheck != null)
@@ -805,37 +1118,5 @@ public class PlayerController : MonoBehaviour
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(groundCheck.position, groundCheck.position + Vector3.down * 1f);
         }
-    }
-
-    void OnGUI()
-    {
-        if (!isInitialized)
-        {
-            GUI.Label(new Rect(10, 10, 300, 40), "⏳ INICIALIZANDO...");
-            return;
-        }
-
-        string playerType = "Player1";
-        if (gameObject.tag == "Player2") playerType = "Player2";
-        else if (gameObject.tag == "Bot") playerType = "Bot";
-
-        float yPosition = 10f;
-        if (playerType == "Player2") yPosition = 200f;
-        else if (playerType == "Bot") yPosition = 400f;
-
-        string gravedadStatus = isZeroGravityActive ? " 🚀 GRAVEDAD CERO" : "";
-
-        GUI.Label(new Rect(10, yPosition, 400, 220),
-            $"{playerType} - {gameObject.name}{gravedadStatus}\n" +
-            $"Player Number: {playerNumber}\n" +
-            $"Use Keyboard Input: {useKeyboardInput}\n" +
-            $"EnSuelo: {isGrounded}\n" +
-            $"VelY: {rb.velocity.y:F2}\n" +
-            $"Cooldown: {jumpCooldown}\n" +
-            $"Estado: {jumpState}\n" +
-            $"Gravedad: {rb.gravityScale}\n" +
-            $"Salud: {health}\n" +
-            $"Controles: {controlEnabled}\n" +
-            $"ZeroG Activo: {isZeroGravityActive}");
     }
 }

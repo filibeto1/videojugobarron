@@ -175,7 +175,10 @@ MonoBehaviour:
   horizontalAxis: Horizontal
   jumpButton: Jump
   playerNumber: 1
-  useKeyboardInput: 1
+  useKeyboardInput: 0
+  useMobileInput: 1
+  movementJoystick: {fileID: 0}
+  jumpJoystick: {fileID: 0}
   rb: {fileID: 0}
   collider2d: {fileID: 0}
   animator: {fileID: 0}

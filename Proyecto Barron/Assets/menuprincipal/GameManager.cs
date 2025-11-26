@@ -82,6 +82,9 @@ public class GameManager : MonoBehaviour
         // ✅ GameManager YA NO SPAWNA JUGADORES
         Debug.Log("✅ GameManager: Dejando que PlayerScenePersister maneje los jugadores");
 
+        // ✅ NUEVO: Forzar reconexión de joysticks después de cargar escena
+        StartCoroutine(ForceJoystickReconnectionAfterSceneLoad());
+
         // REINICIAR ESTADO SOLO SI ES UNA NUEVA PARTIDA
         if (ShouldResetGameState(scene.name))
         {
@@ -90,6 +93,27 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("🔁 Manteniendo estado del juego para continuidad");
+        }
+    }
+
+    // ✅ NUEVO: Forzar reconexión de joysticks
+    private IEnumerator ForceJoystickReconnectionAfterSceneLoad()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        PersistentCanvasManager canvasManager = FindObjectOfType<PersistentCanvasManager>();
+        if (canvasManager != null)
+        {
+            canvasManager.ReconnectAllJoysticks();
+            Debug.Log("🔄 GameManager: Solicitada reconexión de joysticks");
+        }
+
+        // ✅ También forzar reconexión desde el jugador
+        yield return new WaitForSeconds(0.5f);
+        PlayerController player = FindObjectOfType<PlayerController>();
+        if (player != null)
+        {
+            player.ForceReconnectJoysticks();
         }
     }
 
